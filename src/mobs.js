@@ -569,6 +569,16 @@ export function updateMobs(dt){
 
     // ── Villager AI Module Ticking ──
     if (m.type === 'villager') {
+      // Check villager death from damage/explosions
+      if (m.hp <= 0) {
+        if (game.survival) {
+          spawnXpOrbs(m.pos.x, m.pos.y + 0.5, m.pos.z, 5);
+        }
+        try { playVillagerHurtSound(); } catch (e) {}
+        removeMob(i);
+        continue;
+      }
+
       // Expose player position for look-at-player behaviour
       m._playerPos = player.pos;
       // Run schedule (returns true = handled movement; skip passive animal wander)

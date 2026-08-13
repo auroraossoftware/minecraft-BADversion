@@ -534,11 +534,41 @@ export function updatePrimedTnt(dt) {
         const tntDmg = Math.max(1, Math.ceil(30 * (1 - pDist / maxDamageDist)));
         hurtPlayer(tntDmg, "tnt");
       }
-      for (const m of game.mobs) {
-        const mDist = (tnt && tnt.pos && m && m.pos) ? tnt.pos.distanceTo(m.pos) : 999;
+      for (let mi = game.mobs.length - 1; mi >= 0; mi--) {
+        const m = game.mobs[mi];
+        if (!m || !m.pos) continue;
+        const mDist = tnt && tnt.pos ? tnt.pos.distanceTo(m.pos) : 999;
         if (mDist < maxDamageDist) {
-          m.hp -= Math.max(1, Math.ceil(40 * (1 - mDist / maxDamageDist)));
-          m.hurtFlash = 0.3;
+          const dmg = Math.max(1, Math.ceil(40 * (1 - mDist / maxDamageDist)));
+          m.hp -= dmg;
+          m.hurtFlash = 0.35;
+
+          // Apply physical explosion knockback
+          if (mDist > 0.1) {
+            const kbX = (m.pos.x - tnt.pos.x) / mDist;
+            const kbZ = (m.pos.z - tnt.pos.z) / mDist;
+            const kbForce = Math.min(20, (1 - mDist / maxDamageDist) * 22);
+            m.vel.x += kbX * kbForce;
+            m.vel.z += kbZ * kbForce;
+            m.vel.y = Math.max(m.vel.y + 5, 7.5);
+            m.onGround = false;
+          }
+
+          if (m.type === 'villager') {
+            m.panicTimer = 10.0;
+            m.panicThreatPos = tnt.pos.clone();
+            m.state = 'panic';
+            m.isSleeping = false;
+            try { playVillagerHurtSound(); } catch (e) {}
+          }
+
+          if (m.hp <= 0) {
+            if (game.survival) {
+              if (m.def?.drop) spawnItemDrop(m.def.drop, m.def.dropN || 1, m.pos.x, m.pos.y + 0.5, m.pos.z);
+              spawnXpOrbs(m.pos.x, m.pos.y + 0.5, m.pos.z, m.type === 'villager' ? 5 : 3);
+            }
+            removeMob(mi);
+          }
         }
       }
       webgl.scene.remove(tnt.mesh);
