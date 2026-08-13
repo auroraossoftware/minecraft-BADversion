@@ -149,6 +149,13 @@ function _handleWork(mob, dt) {
   if (distToWork > WANDER_RADIUS) {
     _steerTo(mob, mob.workplacePos, MOVE_SPEED_NORMAL);
   } else {
+    // If we collided with a wall while wandering, immediately stop and choose a new direction
+    if (mob.hitWall) {
+      mob.hitWall = false;
+      mob.wanderTimer = 0;
+      mob.vel.set(0, 0, 0);
+    }
+
     // Idle wander within workplace area
     mob.wanderTimer = (mob.wanderTimer || 0) - dt;
     if (mob.wanderTimer <= 0) {
@@ -157,8 +164,8 @@ function _handleWork(mob, dt) {
       if (Math.random() < 0.6) {
         // Set a wander yaw
         mob.yaw = angle;
-        mob.vel.x = -Math.sin(mob.yaw) * MOVE_SPEED_NORMAL * 0.5;
-        mob.vel.z = -Math.cos(mob.yaw) * MOVE_SPEED_NORMAL * 0.5;
+        mob.vel.x = -Math.sin(mob.yaw) * MOVE_SPEED_NORMAL * 0.6;
+        mob.vel.z = -Math.cos(mob.yaw) * MOVE_SPEED_NORMAL * 0.6;
       } else {
         // Idle: face a random direction and stand still
         mob.yaw = angle;

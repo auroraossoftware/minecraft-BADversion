@@ -450,3 +450,96 @@ export function stopAmbientBGM() {
     bgmInterval = null;
   }
 }
+
+// ── Villager Vocal Synthesizer ──────────────────────────────────────────────
+
+export function playVillagerGreetSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+
+    osc.type = "sawtooth";
+    // Authentic guttural "Hrmmm!" pitch slide (160Hz -> 125Hz)
+    osc.frequency.setValueAtTime(160, now);
+    osc.frequency.exponentialRampToValueAtTime(125, now + 0.35);
+
+    // Formant filter for nasal vocal resonance
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(650, now);
+    filter.Q.setValueAtTime(4.0, now);
+
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.18, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.4);
+    setTimeout(() => safeDisconnect(osc, filter, gain), 450);
+  } catch (e) {}
+}
+
+export function playVillagerTradeSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "triangle";
+    // Cheerful "Aha!" pitch rise (180Hz -> 250Hz -> 320Hz)
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.linearRampToValueAtTime(250, now + 0.12);
+    osc.frequency.linearRampToValueAtTime(320, now + 0.28);
+
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.20, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.35);
+    setTimeout(() => safeDisconnect(osc, gain), 400);
+  } catch (e) {}
+}
+
+export function playVillagerHurtSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+
+    osc.type = "sawtooth";
+    // Sharp "Hwah!" grunt (230Hz -> 100Hz)
+    osc.frequency.setValueAtTime(230, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 0.22);
+
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(800, now);
+
+    gain.gain.setValueAtTime(0.22, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.28);
+    setTimeout(() => safeDisconnect(osc, filter, gain), 320);
+  } catch (e) {}
+}
+

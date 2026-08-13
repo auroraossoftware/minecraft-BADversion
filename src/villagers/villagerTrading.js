@@ -3,6 +3,7 @@ import { addItem, removeItem, invCount, hasInventorySpace } from '../player.js';
 import { toast } from '../ui.js';
 import { thingName } from '../config.js';
 import { GREEN_COIN_ITEM_ID, getTradeById } from './villagerTradeCatalog.js';
+import { playVillagerTradeSound } from '../audio.js';
 
 export function executeBuyTrade(trade) {
   if (!trade) return false;
@@ -25,6 +26,7 @@ export function executeBuyTrade(trade) {
   // Deduct coins & give item safely
   removeItem(GREEN_COIN_ITEM_ID, cost);
   addItem(trade.itemId, yieldCount);
+  try { playVillagerTradeSound(); } catch (e) {}
   toast(`🛍️ Purchased +${yieldCount} ${thingName(trade.itemId)} for 🪙 ${cost} Green Coins!`);
   return true;
 }
@@ -50,6 +52,7 @@ export function executeSellTrade(trade) {
   // Deduct items & give Green Coins
   removeItem(trade.itemId, reqQty);
   addItem(GREEN_COIN_ITEM_ID, rewardCoins);
+  try { playVillagerTradeSound(); } catch (e) {}
   toast(`🌾 Sold ${reqQty} ${thingName(trade.itemId)} for 🪙 ${rewardCoins} Green Coins!`);
   return true;
 }

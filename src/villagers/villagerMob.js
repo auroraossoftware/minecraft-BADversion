@@ -84,16 +84,25 @@ export function createVillagerMesh(profession = 'unemployed') {
   armGroup.add(handMesh);
   group.add(armGroup);
 
-  // ── Robe skirt (legs hidden under robe) ──
-  const legGeo = new THREE.BoxGeometry(0.5, 0.58, 0.38);
-  const legMesh = new THREE.Mesh(legGeo, robeMat);
-  legMesh.position.set(0, 0.25, 0);
-  group.add(legMesh);
+  // ── Articulated Legs (pivots at hip y=0.55) ──
+  const legGeo = new THREE.BoxGeometry(0.24, 0.54, 0.36);
+  legGeo.translate(0, -0.27, 0); // pivot at hip
+
+  const leftLeg = new THREE.Mesh(legGeo, robeMat);
+  leftLeg.position.set(-0.13, 0.55, 0);
+  group.add(leftLeg);
+
+  const rightLeg = new THREE.Mesh(legGeo, robeMat);
+  rightLeg.position.set(0.13, 0.55, 0);
+  group.add(rightLeg);
 
   // Expose references for animation
   group.userData.head = headMesh;
   group.userData.arms = armGroup;
-  group.userData.legs = legMesh;
+  group.userData.legs = leftLeg;
+  group.userData.leftLeg = leftLeg;
+  group.userData.rightLeg = rightLeg;
+  group.userData.torso = torsoMesh;
 
   return group;
 }

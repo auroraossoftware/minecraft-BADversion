@@ -7,7 +7,7 @@ import {
 } from './player.js';
 import { spawnItemDrop, spawnXpOrbs, spawnProjectile } from './main.js';
 import { toast, scheduleSave } from './ui.js';
-import { playHissSound, stopHissSound, playExplodeSound, playHitSound, playPigSound, playSheepSound, playZombieSound } from './audio.js';
+import { playHissSound, stopHissSound, playExplodeSound, playHitSound, playPigSound, playSheepSound, playZombieSound, playVillagerGreetSound, playVillagerTradeSound, playVillagerHurtSound } from './audio.js';
 import { findPath } from './pathfinder.js';
 import { createVillagerMesh, createVillagerState } from './villagers/villagerMob.js';
 import { updateVillagerSchedule } from './villagers/villagerSchedule.js';
@@ -599,34 +599,75 @@ export function updateMobs(dt){
         mobMoveAxis(m, 'z', m.vel.z * dt);
         mobMoveAxis(m, 'y', m.vel.y * dt);
         if (m.mesh) {
-          m.mesh.position.copy(m.pos);
-          if (typeof m.yaw === 'number' && !isNaN(m.yaw)) {
-            let diff = m.yaw - m.mesh.rotation.y;
-            diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-            m.mesh.rotation.y += diff * Math.min(1.0, dt * 10.0);
-          }
-          // Head look-at animation
           const ud = m.mesh.userData || {};
-          if (ud.head && m._playerPos) {
-            const lookDx = m._playerPos.x - m.pos.x;
-            const lookDz = m._playerPos.z - m.pos.z;
-            const horizDist = Math.hypot(lookDx, lookDz);
-            if (horizDist < 3.5) {
-              // Villager notices player — look at them
-              const targetYaw = Math.atan2(-lookDx, -lookDz);
-              let relYaw = targetYaw - m.mesh.rotation.y;
-              relYaw = Math.atan2(Math.sin(relYaw), Math.cos(relYaw));
-              const clampedYaw = Math.max(-0.8, Math.min(0.8, relYaw));
-              ud.head.rotation.y += (clampedYaw - ud.head.rotation.y) * Math.min(1.0, dt * 6.0);
-            } else {
-              ud.head.rotation.y += (0 - ud.head.rotation.y) * Math.min(1.0, dt * 4.0);
+          m.mesh.position.copy(m.pos);
+
+          // Handle sleeping posture in bed
+          if (m.isSleeping) {
+            m.mesh.rotation.x = -Math.PI / 2;
+            m.mesh.rotation.z = 0;
+            m.mesh.position.y = m.pos.y - 0.45;
+            if (ud.head) ud.head.rotation.set(0, 0, 0);
+            if (ud.leftLeg) ud.leftLeg.rotation.x = 0;
+            if (ud.rightLeg) ud.rightLeg.rotation.x = 0;
+          } else {
+            m.mesh.rotation.x = 0;
+            m.mesh.rotation.z = 0;
+
+            if (typeof m.yaw === 'number' && !isNaN(m.yaw)) {
+              let diff = m.yaw - m.mesh.rotation.y;
+              diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+              m.mesh.rotation.y += diff * Math.min(1.0, dt * 10.0);
             }
-          }
-          // Leg bob while moving
-          const isMoving = (Math.abs(m.vel.x) > 0.05 || Math.abs(m.vel.z) > 0.05);
-          if (isMoving) {
-            m.animPhase = (m.animPhase || 0) + dt * m.def.speed * 3.5;
-            m.mesh.position.y += Math.sin(m.animPhase * 2) * 0.025;
+
+            // Head 3D Look-At: tracking player horizontal yaw & vertical pitch
+            if (ud.head && m._playerPos) {
+              const lookDx = m._playerPos.x - m.pos.x;
+              const lookDz = m._playerPos.z - m.pos.z;
+              const horizDist = Math.hypot(lookDx, lookDz);
+              if (horizDist < 5.0) {
+                // Pitch up/down toward player head
+                const lookDy = (m._playerPos.y + 1.6) - (m.pos.y + 1.35);
+                const targetPitch = -Math.atan2(lookDy, Math.max(0.5, horizDist));
+                const clampedPitch = Math.max(-0.55, Math.min(0.55, targetPitch));
+                ud.head.rotation.x += (clampedPitch - ud.head.rotation.x) * Math.min(1.0, dt * 6.0);
+
+                // Yaw left/right toward player
+                const targetYaw = Math.atan2(-lookDx, -lookDz);
+                let relYaw = targetYaw - m.mesh.rotation.y;
+                relYaw = Math.atan2(Math.sin(relYaw), Math.cos(relYaw));
+                const clampedYaw = Math.max(-0.85, Math.min(0.85, relYaw));
+                ud.head.rotation.y += (clampedYaw - ud.head.rotation.y) * Math.min(1.0, dt * 6.0);
+
+                // Greet player with authentic "Hrmmm!" voice
+                m.greetCooldown = (m.greetCooldown || 0) - dt;
+                if (horizDist < 3.0 && m.greetCooldown <= 0) {
+                  m.greetCooldown = 12.0 + Math.random() * 8.0;
+                  try { playVillagerGreetSound(); } catch (e) {}
+                }
+              } else {
+                ud.head.rotation.x += (0 - ud.head.rotation.x) * Math.min(1.0, dt * 4.0);
+                ud.head.rotation.y += (0 - ud.head.rotation.y) * Math.min(1.0, dt * 4.0);
+              }
+            }
+
+            // Walking limb animations
+            const isMoving = (Math.abs(m.vel.x) > 0.05 || Math.abs(m.vel.z) > 0.05);
+            if (isMoving) {
+              m.animPhase = (m.animPhase || 0) + dt * (m.def.speed || 1.8) * 4.0;
+              const swing = Math.sin(m.animPhase) * 0.55;
+              if (ud.leftLeg)  ud.leftLeg.rotation.x = swing;
+              if (ud.rightLeg) ud.rightLeg.rotation.x = -swing;
+              if (ud.arms)     ud.arms.rotation.x = Math.sin(m.animPhase * 2) * 0.08;
+              m.mesh.position.y += Math.abs(Math.sin(m.animPhase)) * 0.035;
+            } else {
+              // Idle breathing
+              m.idlePhase = (m.idlePhase || 0) + dt * 2.2;
+              if (ud.leftLeg)  ud.leftLeg.rotation.x += (0 - ud.leftLeg.rotation.x) * Math.min(1.0, dt * 8.0);
+              if (ud.rightLeg) ud.rightLeg.rotation.x += (0 - ud.rightLeg.rotation.x) * Math.min(1.0, dt * 8.0);
+              if (ud.arms)     ud.arms.position.y = 0.65 + Math.sin(m.idlePhase) * 0.012;
+              if (ud.head)     ud.head.position.y = 1.35 + Math.sin(m.idlePhase) * 0.015;
+            }
           }
         }
         continue; // skip rest of hostile/passive AI loop for this frame

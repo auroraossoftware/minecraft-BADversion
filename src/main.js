@@ -36,7 +36,7 @@ import {
   setChestOpen, setFurnaceOpen, setActiveChestCoords, setActiveFurnaceCoords,
   unlockAchievement
 } from './ui.js';
-import { playPlaceSound, playMineSound, playHitSound, playHissSound, playExplodeSound } from './audio.js';
+import { playPlaceSound, playMineSound, playHitSound, playHissSound, playExplodeSound, playVillagerGreetSound, playVillagerTradeSound } from './audio.js';
 import { activeNavigation, findPath, updatePathTrail, tickPathTrail, clearActiveNavigation } from './pathfinder.js';
 
 export const itemDrops = [];
@@ -1018,6 +1018,7 @@ export function tryTradeWithVillager() {
   if (!best) return false;
 
   if (document.pointerLockElement) document.exitPointerLock();
+  try { playVillagerGreetSound(); } catch (e) {}
   const trades = getTradesByProfession(best.profession || 'farmer');
   if (trades && trades.length > 0) {
     openTradePrompt(trades[0]);
