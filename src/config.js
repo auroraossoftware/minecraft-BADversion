@@ -116,6 +116,7 @@ export const BLOCKS = {
   90:{ name: "Wheat Crop (Seeded)", all:0x7a6a4a, solid:false, alpha:true, cutout:true, hardness:0.1 },
   91:{ name: "Wheat Crop (Growing)", all:0x6aa84f, solid:false, alpha:true, cutout:true, hardness:0.1 },
   92:{ name: "Wheat Crop (Ripe)", all:0xd8c060, solid:false, alpha:true, cutout:true, hardness:0.1 },
+  95:{ name: "Market Pedestal", all:0x8f8f8f, solid:true, hardness:2.0 },
 };
 
 // ---- Items registry ---------------------------------------------------------
@@ -522,7 +523,8 @@ export const BLOCK_TILES = {
   119:{top:"wool_yellow", side:"wool_red", bottom:"wool_yellow"},
   57:{top:"wool_red", side:"wool_white", bottom:"plank"},
   89:{top:"terracotta",side:"dirt",bottom:"dirt"},
-  90:{all:"grass_side"}, 91:{all:"wool_yellow"}, 92:{all:"wool_yellow"}
+  90:{all:"grass_side"}, 91:{all:"wool_yellow"}, 92:{all:"wool_yellow"},
+  95:{all:"stone_brick"}
 };
 
 export function tileFor(id, face){
