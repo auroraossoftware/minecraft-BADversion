@@ -108,9 +108,9 @@ export function getVillageLayout(vcx, vcz) {
     return layout;
   }
 
-  // ── Step 0: Landscape Terraforming & Grading ─────────────────────────────
-  // Smoothly blend the terrain within the village perimeter toward centerBaseY
-  // Eliminates jagged sheer cliff cuts, chasms, and steep unnatural drops
+  // ── Step 0: Landscape Plateau Terraforming ────────────────────────────────
+  // The town core (r <= 22) is completely flat at centerBaseY for perfect aesthetics.
+  // The perimeter rim (r = 22..30) gently slopes down/up to meet natural terrain.
   for (let dx = -VILLAGE_RADIUS - 1; dx <= VILLAGE_RADIUS + 1; dx++) {
     for (let dz = -VILLAGE_RADIUS - 1; dz <= VILLAGE_RADIUS + 1; dz++) {
       const wx = centerWx + dx;
@@ -119,26 +119,30 @@ export function getVillageLayout(vcx, vcz) {
       if (dist > VILLAGE_RADIUS + 1) continue;
 
       const naturalH = surfaceHeight(wx, wz);
-      // Smoothstep radial transition from center to perimeter
-      const normDist = dist / (VILLAGE_RADIUS + 1);
-      const weight = normDist * normDist * (3 - 2 * normDist); // 0 at center, 1 at perimeter
-      const gradedY = Math.round(centerBaseY * (1 - weight) + naturalH * weight);
+      let gradedY = centerBaseY;
+
+      if (dist > 22) {
+        // Smooth transition over the outer 8 blocks to natural terrain
+        const t = (dist - 22) / (VILLAGE_RADIUS + 1 - 22);
+        const smoothT = t * t * (3 - 2 * t);
+        gradedY = Math.round(centerBaseY * (1 - smoothT) + naturalH * smoothT);
+      }
 
       // Topsoil: Grass (ID 1)
       layout.voxels.set(`${wx},${gradedY},${wz}`, 1);
       // Subsoil: Dirt (ID 2)
-      for (let dy = 1; dy <= 3; dy++) {
+      for (let dy = 1; dy <= 4; dy++) {
         if (gradedY - dy >= 1) {
           layout.voxels.set(`${wx},${gradedY - dy},${wz}`, 2);
         }
       }
       // Bedrock stone below: Stone (ID 3)
-      for (let dy = 4; dy <= 6; dy++) {
+      for (let dy = 5; dy <= 8; dy++) {
         if (gradedY - dy >= 1) {
           layout.voxels.set(`${wx},${gradedY - dy},${wz}`, 3);
         }
       }
-      // Clear air above graded terrain to remove tree leaves, shrubs, and cave overhangs
+      // Clear air above graded terrain to eliminate trees, overhangs, and cliff walls
       const clearTop = Math.max(naturalH + 6, gradedY + 8);
       for (let ay = gradedY + 1; ay <= Math.min(HEIGHT - 1, clearTop); ay++) {
         layout.voxels.set(`${wx},${ay},${wz}`, 0);
@@ -146,47 +150,53 @@ export function getVillageLayout(vcx, vcz) {
     }
   }
 
-  // ── 1. Central Village Well & Town Plaza ─────────────────────────────────
+  // ── 1. Central Village Well & Town Square Plaza ──────────────────────────
   const wellSchematic = getVillageWellSchematic();
   placeSchematicWithFoundation(layout, centerWx, centerBaseY, centerWz, wellSchematic);
   layout.structures.push({ type: 'Village Well', x: centerWx, y: centerBaseY, z: centerWz });
 
-  // Stone Brick Plaza ring around the well (5x5 apron)
-  for (let dx = -2; dx <= 2; dx++) {
-    for (let dz = -2; dz <= 2; dz++) {
-      if (Math.abs(dx) <= 1 && Math.abs(dz) <= 1) continue; // well occupies 3x3
-      layout.voxels.set(`${centerWx + dx},${centerBaseY},${centerWz + dz}`, 16); // Stone Brick apron
+  // Stone Brick Plaza apron around the well (7x7 plaza)
+  for (let dx = -3; dx <= 3; dx++) {
+    for (let dz = -3; dz <= 3; dz++) {
+      if (Math.abs(dx) <= 1 && Math.abs(dz) <= 1) continue; // well is at centre
+      layout.voxels.set(`${centerWx + dx},${centerBaseY},${centerWz + dz}`, 16); // Stone Brick
     }
   }
 
-  // ── 2. Market Stalls in Central Town Plaza ────────────────────────────────
-  // Stall 1: Red & White Striped Canopy (North-East of Well)
-  buildMarketStall(layout, centerWx + 4, centerBaseY, centerWz + 3, [51, 50]); // Red/White
-  // Stall 2: Blue & Yellow Striped Canopy (North-West of Well)
-  buildMarketStall(layout, centerWx - 4, centerBaseY, centerWz + 3, [52, 54]); // Blue/Yellow
+  // ── 2. Medieval Market Stalls in Central Town Plaza ──────────────────────
+  // Stall 1: Red & White Striped Canopy (North-East)
+  buildMarketStall(layout, centerWx + 5, centerBaseY, centerWz + 3, [51, 50]);
+  // Stall 2: Blue & Yellow Striped Canopy (North-West)
+  buildMarketStall(layout, centerWx - 5, centerBaseY, centerWz + 3, [52, 54]);
+
+  // Decorative Hedges around Plaza corners
+  layout.voxels.set(`${centerWx + 3},${centerBaseY + 1},${centerWz + 3}`, 6);
+  layout.voxels.set(`${centerWx - 3},${centerBaseY + 1},${centerWz + 3}`, 6);
+  layout.voxels.set(`${centerWx + 3},${centerBaseY + 1},${centerWz - 3}`, 6);
+  layout.voxels.set(`${centerWx - 3},${centerBaseY + 1},${centerWz - 3}`, 6);
 
   // ── 3. Perimeter Boundary Wall & 4 Fortified Gatehouses ──────────────────
   buildPerimeterWall(layout, centerWx, centerBaseY, centerWz);
 
-  // ── 4. Buildings & Farmland along Roads ───────────────────────────────────
+  // ── 4. Buildings & Farmland along Flat Boulevards ─────────────────────────
   const buildingSlots = [
     // East arm
-    { offsetDx: 16,  offsetDz: 6,   schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
-    { offsetDx: 16,  offsetDz: -10, schematic: getBlacksmithWorkshopSchematic(),    profession: 'blacksmith' },
+    { offsetDx: 15,  offsetDz: 6,   schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
+    { offsetDx: 15,  offsetDz: -10, schematic: getBlacksmithWorkshopSchematic(),    profession: 'blacksmith' },
     // West arm
-    { offsetDx: -18, offsetDz: 6,   schematic: getLargeTwoStoryHouseSchematic(),    profession: 'librarian' },
-    { offsetDx: -18, offsetDz: -10, schematic: getLibrarianHouseSchematic(),        profession: 'librarian' },
+    { offsetDx: -17, offsetDz: 6,   schematic: getLargeTwoStoryHouseSchematic(),    profession: 'librarian' },
+    { offsetDx: -17, offsetDz: -10, schematic: getLibrarianHouseSchematic(),        profession: 'librarian' },
     // South arm
-    { offsetDx: 6,   offsetDz: 16,  schematic: getClericShrineSchematic(),          profession: 'cleric' },
-    { offsetDx: -8,  offsetDz: 16,  schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
+    { offsetDx: 6,   offsetDz: 15,  schematic: getClericShrineSchematic(),          profession: 'cleric' },
+    { offsetDx: -8,  offsetDz: 15,  schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
     // North arm
-    { offsetDx: 6,   offsetDz: -18, schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
-    { offsetDx: -8,  offsetDz: -18, schematic: getLargeTwoStoryHouseSchematic(),    profession: 'unemployed' },
+    { offsetDx: 6,   offsetDz: -17, schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
+    { offsetDx: -8,  offsetDz: -17, schematic: getLargeTwoStoryHouseSchematic(),    profession: 'unemployed' },
     // Farmland plots
-    { offsetDx: 8,   offsetDz: 14,  schematic: getStandardCropStripSchematic(),     profession: null },
-    { offsetDx: -12, offsetDz: 14,  schematic: getDoubleTrenchFieldSchematic(),     profession: null },
-    { offsetDx: 8,   offsetDz: -16, schematic: getBackyardGardenSchematic(),        profession: null },
-    { offsetDx: -12, offsetDz: -16, schematic: getTerracedFarmlandSchematic(),      profession: null },
+    { offsetDx: 8,   offsetDz: 13,  schematic: getStandardCropStripSchematic(),     profession: null },
+    { offsetDx: -12, offsetDz: 13,  schematic: getDoubleTrenchFieldSchematic(),     profession: null },
+    { offsetDx: 8,   offsetDz: -15, schematic: getBackyardGardenSchematic(),        profession: null },
+    { offsetDx: -12, offsetDz: -15, schematic: getTerracedFarmlandSchematic(),      profession: null },
   ];
 
   const buildingBaseHeights = [];
@@ -194,13 +204,7 @@ export function getVillageLayout(vcx, vcz) {
   for (const slot of buildingSlots) {
     const swx = centerWx + slot.offsetDx;
     const swz = centerWz + slot.offsetDz;
-
-    // Calculate balanced base height from graded landscape
-    const dist = Math.hypot(slot.offsetDx, slot.offsetDz);
-    const normDist = dist / (VILLAGE_RADIUS + 1);
-    const weight = normDist * normDist * (3 - 2 * normDist);
-    const naturalH = surfaceHeight(swx, swz);
-    const sBaseY = Math.round(centerBaseY * (1 - weight) + naturalH * weight);
+    const sBaseY = centerBaseY; // Level plateau matching town square
 
     buildingBaseHeights.push({ swx, swz, sBaseY, offsetDx: slot.offsetDx, offsetDz: slot.offsetDz });
 
@@ -231,13 +235,13 @@ export function getVillageLayout(vcx, vcz) {
     profession: 'farmer',
     x: centerWx + 8,
     y: centerBaseY + 1,
-    z: centerWz + 14,
-    homeX: centerWx + 16,
+    z: centerWz + 13,
+    homeX: centerWx + 15,
     homeY: centerBaseY + 1,
     homeZ: centerWz + 6,
     workX: centerWx + 8,
     workY: centerBaseY + 1,
-    workZ: centerWz + 14,
+    workZ: centerWz + 13,
     wellX: centerWx,
     wellY: centerBaseY + 1,
     wellZ: centerWz
@@ -246,22 +250,22 @@ export function getVillageLayout(vcx, vcz) {
     profession: 'farmer',
     x: centerWx - 12,
     y: centerBaseY + 1,
-    z: centerWz + 14,
-    homeX: centerWx - 18,
+    z: centerWz + 13,
+    homeX: centerWx - 17,
     homeY: centerBaseY + 1,
     homeZ: centerWz + 6,
     workX: centerWx - 12,
     workY: centerBaseY + 1,
-    workZ: centerWz + 14,
+    workZ: centerWz + 13,
     wellX: centerWx,
     wellY: centerBaseY + 1,
     wellZ: centerWz
   });
 
-  // ── 6. Smooth Road Network & Connecting Sidewalk Spurs ───────────────────
+  // ── 6. Smooth Level Road Network & Connecting Sidewalks ───────────────────
   const pathColumns = new Map(); // key: "wx,wz" -> target pathY
 
-  // 6A: 4 Main Cardinal Boulevards (3 blocks wide)
+  // 6A: 4 Main Cardinal Boulevards (3 blocks wide, flat at centerBaseY)
   const pathDefs = [
     { dx: 1,  dz: 0,  length: VILLAGE_RADIUS },  // East
     { dx: -1, dz: 0,  length: VILLAGE_RADIUS },  // West
@@ -272,16 +276,20 @@ export function getVillageLayout(vcx, vcz) {
   for (const p of pathDefs) {
     const endX = centerWx + p.dx * p.length;
     const endZ = centerWz + p.dz * p.length;
-    const startH = centerBaseY;
-    const endH = surfaceHeight(endX, endZ);
+    const gateY = surfaceHeight(endX, endZ);
 
     for (let step = 0; step <= p.length; step++) {
-      const t = step / p.length;
-      const targetY = Math.round(startH + (endH - startH) * t);
       const px = centerWx + p.dx * step;
       const pz = centerWz + p.dz * step;
+      let targetY = centerBaseY;
 
-      // 3-block wide roadbed
+      // Outer 8 blocks ramp gently up/down to gate height
+      if (step > 22) {
+        const t = (step - 22) / (p.length - 22);
+        targetY = Math.round(centerBaseY + (gateY - centerBaseY) * t);
+      }
+
+      // 3-block wide gravel roadbed
       for (let pw = -1; pw <= 1; pw++) {
         const pathWx = (p.dx === 0) ? px + pw : px;
         const pathWz = (p.dz === 0) ? pz + pw : pz;
@@ -295,40 +303,32 @@ export function getVillageLayout(vcx, vcz) {
     }
   }
 
-  // 6B: Connecting Sidewalk Spurs to Every House Door
+  // 6B: Connecting Sidewalk Spurs from Boulevard to House Entrances
   for (const b of buildingBaseHeights) {
     const doorWx = b.swx;
     const doorWz = b.swz - 1;
-    const doorY = b.sBaseY - 1;
+    const doorY = centerBaseY;
 
     if (Math.abs(b.offsetDx) >= Math.abs(b.offsetDz)) {
       const zMin = Math.min(doorWz, centerWz);
       const zMax = Math.max(doorWz, centerWz);
-      const mainRoadY = pathColumns.get(`${doorWx},${centerWz}`) || centerBaseY;
-
       for (let z = zMin; z <= zMax; z++) {
-        const t = (z - zMin) / Math.max(1, zMax - zMin);
-        const spurY = Math.round(mainRoadY + (doorY - mainRoadY) * t);
         for (let pw = 0; pw <= 1; pw++) {
-          pathColumns.set(`${doorWx + pw},${z}`, spurY);
+          pathColumns.set(`${doorWx + pw},${z}`, doorY);
         }
       }
     } else {
       const xMin = Math.min(doorWx, centerWx);
       const xMax = Math.max(doorWx, centerWx);
-      const mainRoadY = pathColumns.get(`${centerWx},${doorWz}`) || centerBaseY;
-
       for (let x = xMin; x <= xMax; x++) {
-        const t = (x - xMin) / Math.max(1, xMax - xMin);
-        const spurY = Math.round(mainRoadY + (doorY - mainRoadY) * t);
         for (let pw = 0; pw <= 1; pw++) {
-          pathColumns.set(`${x},${doorWz + pw}`, spurY);
+          pathColumns.set(`${x},${doorWz + pw}`, doorY);
         }
       }
     }
   }
 
-  // 6C: Stamp All Pathways (Gravel + 4 Air Clearance + Deep Solid Foundation)
+  // 6C: Stamp All Pathways (Gravel + 4 Air Clearance + Deep Foundation)
   for (const [colKey, pathY] of pathColumns) {
     const [xStr, zStr] = colKey.split(',');
     const pathWx = parseInt(xStr, 10);
@@ -352,18 +352,18 @@ export function getVillageLayout(vcx, vcz) {
 
   // ── 7. Street Lamp Posts along Roads & Plaza ─────────────────────────────
   const lampLocations = [
-    { dx: 7,   dz: 2 },
-    { dx: -7,  dz: 2 },
-    { dx: 2,   dz: 7 },
-    { dx: -2,  dz: -7 },
+    { dx: 6,   dz: 2 },
+    { dx: -6,  dz: 2 },
+    { dx: 2,   dz: 6 },
+    { dx: -2,  dz: -6 },
     { dx: 14,  dz: 2 },
     { dx: -14, dz: 2 },
     { dx: 2,   dz: 14 },
     { dx: -2,  dz: -14 },
-    { dx: 22,  dz: 2 },
-    { dx: -22, dz: 2 },
-    { dx: 2,   dz: 22 },
-    { dx: -2,  dz: -22 },
+    { dx: 21,  dz: 2 },
+    { dx: -21, dz: 2 },
+    { dx: 2,   dz: 21 },
+    { dx: -2,  dz: -21 },
   ];
 
   for (const lamp of lampLocations) {
@@ -381,11 +381,9 @@ export function getVillageLayout(vcx, vcz) {
  * Builds an authentic medieval village street lamp post
  */
 function buildLampPost(layout, wx, baseY, wz) {
-  // 2-block tall Oak Log post (y = 1..2)
-  layout.voxels.set(`${wx},${baseY + 1},${wz}`, 5);
+  layout.voxels.set(`${wx},${baseY + 1},${wz}`, 5);  // Oak Log post
   layout.voxels.set(`${wx},${baseY + 2},${wz}`, 5);
-  // Lantern cross-cap
-  layout.voxels.set(`${wx},${baseY + 3},${wz}`, 7); // Oak plank
+  layout.voxels.set(`${wx},${baseY + 3},${wz}`, 7);  // Oak Plank header
   layout.voxels.set(`${wx},${baseY + 4},${wz}`, 20); // Torch atop lamp post
 }
 
@@ -404,7 +402,7 @@ function buildMarketStall(layout, wx, baseY, wz, canopyColors = [51, 50]) {
 
   // Wooden counter (y = 1)
   for (let dx = -1; dx <= 1; dx++) {
-    layout.voxels.set(`${wx + dx},${baseY + 1},${wz}`, 7); // Plank counter
+    layout.voxels.set(`${wx + dx},${baseY + 1},${wz}`, 7);
   }
 
   // Striped Wool Canopy Roof (3x3 at y = 4)
@@ -528,7 +526,7 @@ function placeSchematicWithFoundation(layout, originWx, originBaseY, originWz, s
     if (b.dz > maxDz) maxDz = b.dz;
   }
 
-  // ── Step 2: Interior Air Purge (from walking surface dy=0 to roof top dy=maxDy+4) ──
+  // ── Step 2: Interior Air Purge (dy = 0 to roof top dy = maxDy + 4) ────────
   for (let dx = minDx - 1; dx <= maxDx + 1; dx++) {
     for (let dz = minDz - 1; dz <= maxDz + 1; dz++) {
       for (let dy = 0; dy <= maxDy + 4; dy++) {
