@@ -7,7 +7,7 @@ import {
   isSolid, isOpaque, tileFor, tileUV, trng, shade, TILE, ATLAS_COLS, ATLAS_ROWS, TILE_NAMES
 } from './config.js';
 
-import { applyVillageToChunk, isVillageProtectedZone } from './villageGenerator.js';
+import { applyVillageToChunk, isVillageProtectedZone, ensureNearbyVillages } from './villageGenerator.js';
 
 // Streaming queue & static meshing buffers
 export var genQueue = [];
@@ -137,6 +137,7 @@ function carveStructures(ch, ox, oz){
 export function getChunk(cx,cz){ return world.chunks.get(keyOf(cx,cz)); }
 
 export function generateChunk(ch){
+  ensureNearbyVillages(ch.cx, ch.cz);
   const ox = ch.cx*CHUNK, oz = ch.cz*CHUNK;
   for(let x=0;x<CHUNK;x++){
     for(let z=0;z<CHUNK;z++){
@@ -166,8 +167,8 @@ export function generateChunk(ch){
           b = 8; // Pure liquid water on all lakes, rivers, and oceans
         }
         
-        // carve caves (keep bedrock intact)
-        if(b!==AIR && b!==8 && b!==30 && y<h && isCave(wx,y,wz)){ b=AIR; }
+        // carve caves (keep bedrock intact; never carve caves inside village zones)
+        if(b!==AIR && b!==8 && b!==30 && y<h && !isVillageProtectedZone(wx, wz) && isCave(wx,y,wz)){ b=AIR; }
         
         // ores in stone
         if(b===3){

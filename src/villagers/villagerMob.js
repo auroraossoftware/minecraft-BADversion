@@ -147,7 +147,7 @@ export function createVillagerState(x, y, z, profession = 'unemployed',
     lastPos: new THREE.Vector3(x, y, z),
 
     // Social & player interaction
-    lookAtPlayer: false,
+    lookAtPlayer: true,
     reputation: 0,         // +ve = friendly, -ve = wary
     emoteTimer: 0,         // countdown before next emote display
 

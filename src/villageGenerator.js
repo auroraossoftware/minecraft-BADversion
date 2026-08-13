@@ -614,12 +614,28 @@ export function applyVillageToChunk(ch, ox, oz) {
 }
 
 /**
+ * Ensures any candidate village within 2 chunks of (cx, cz) is computed and cached
+ * so that cave carvers and tree generators in world.js are aware of it.
+ */
+export function ensureNearbyVillages(cx, cz) {
+  for (let dcx = -2; dcx <= 2; dcx++) {
+    for (let dcz = -2; dcz <= 2; dcz++) {
+      const vcx = cx + dcx;
+      const vcz = cz + dcz;
+      if (isVillageCenterChunk(vcx, vcz)) {
+        getVillageLayout(vcx, vcz);
+      }
+    }
+  }
+}
+
+/**
  * Returns true if the given world-coordinate falls within any known village
  * perimeter — used by world.js to suppress trees and cave carvers.
  */
 export function isVillageProtectedZone(wx, wz) {
   for (const [, layout] of villageLayoutCache) {
-    if (layout.voxels.size === 0) continue;
+    if (!layout || layout.voxels.size === 0) continue;
     const dx = wx - layout.centerWx;
     const dz = wz - layout.centerWz;
     if (Math.abs(dx) <= VILLAGE_RADIUS + 2 && Math.abs(dz) <= VILLAGE_RADIUS + 2) return true;

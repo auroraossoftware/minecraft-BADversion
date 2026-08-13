@@ -53,11 +53,12 @@ export function updateVillagerSchedule(mob, dt, timeOfDay = 0.5) {
   }
 
   // ── Player curiosity: look at approaching player ──────────────────────────
-  if (mob.lookAtPlayer && mob._playerPos) {
+  if (mob.lookAtPlayer !== false && mob._playerPos && mob.state !== 'sleep' && mob.state !== 'panic') {
     const dx = mob._playerPos.x - mob.pos.x;
     const dz = mob._playerPos.z - mob.pos.z;
-    if (Math.hypot(dx, dz) < 0.1) {
-      // face them
+    const distP = Math.hypot(dx, dz);
+    if (distP < 4.0 && (mob.vel.x === 0 && mob.vel.z === 0)) {
+      // Turn to face approaching player when standing idle
       mob.yaw = Math.atan2(-dx, -dz);
     }
   }
