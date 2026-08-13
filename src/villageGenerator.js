@@ -22,9 +22,6 @@ const villageLayoutCache = new Map();
 // Village radius for perimeter wall (in world-blocks)
 const VILLAGE_RADIUS = 30;
 
-// Set of village center chunk keys that have already placed their perimeter
-const perimeterBuilt = new Set();
-
 /**
  * Checks if a chunk coordinate is a Village Center
  */
@@ -116,34 +113,49 @@ export function getVillageLayout(vcx, vcz) {
   placeSchematicWithFoundation(layout, centerWx, centerBaseY, centerWz, wellSchematic);
   layout.structures.push({ type: 'Village Well', x: centerWx, y: centerBaseY, z: centerWz });
 
-  // ── 3. Perimeter Boundary Wall & 4 Fortified Gatehouses (before buildings, wall is background) ──
+  // ── 2. Perimeter Boundary Wall & 4 Fortified Gatehouses ──────────────────
+  // Placed ground-anchored to terrain with solid foundations so it never floats
   buildPerimeterWall(layout, centerWx, centerBaseY, centerWz);
 
-  // ── 4. Buildings & Farmland along Paths ───────────────────────────────────
+  // ── 3. Buildings & Farmland along Paths ───────────────────────────────────
   const buildingSlots = [
     // East arm
-    { offsetDx: 16,  offsetDz: 5,   schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
+    { offsetDx: 16,  offsetDz: 6,   schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
     { offsetDx: 16,  offsetDz: -10, schematic: getBlacksmithWorkshopSchematic(),    profession: 'blacksmith' },
     // West arm
-    { offsetDx: -18, offsetDz: 5,   schematic: getLargeTwoStoryHouseSchematic(),    profession: 'librarian' },
+    { offsetDx: -18, offsetDz: 6,   schematic: getLargeTwoStoryHouseSchematic(),    profession: 'librarian' },
     { offsetDx: -18, offsetDz: -10, schematic: getLibrarianHouseSchematic(),        profession: 'librarian' },
     // South arm
-    { offsetDx: 5,   offsetDz: 16,  schematic: getClericShrineSchematic(),          profession: 'cleric' },
+    { offsetDx: 6,   offsetDz: 16,  schematic: getClericShrineSchematic(),          profession: 'cleric' },
     { offsetDx: -8,  offsetDz: 16,  schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
     // North arm
-    { offsetDx: 5,   offsetDz: -18, schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
+    { offsetDx: 6,   offsetDz: -18, schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
     { offsetDx: -8,  offsetDz: -18, schematic: getLargeTwoStoryHouseSchematic(),    profession: 'unemployed' },
-    // Farmland plots (no villager spawned at these)
+    // Farmland plots
     { offsetDx: 8,   offsetDz: 14,  schematic: getStandardCropStripSchematic(),     profession: null },
     { offsetDx: -12, offsetDz: 14,  schematic: getDoubleTrenchFieldSchematic(),     profession: null },
     { offsetDx: 8,   offsetDz: -16, schematic: getBackyardGardenSchematic(),        profession: null },
     { offsetDx: -12, offsetDz: -16, schematic: getTerracedFarmlandSchematic(),      profession: null },
   ];
 
+  const buildingBaseHeights = [];
+
   for (const slot of buildingSlots) {
     const swx = centerWx + slot.offsetDx;
     const swz = centerWz + slot.offsetDz;
-    const sBaseY = surfaceHeight(swx, swz);
+
+    // Sample terrain across house footprint for smooth balanced foundation
+    let sumH = 0, countH = 0;
+    for (let bx = -2; bx <= 2; bx++) {
+      for (let bz = 0; bz <= 4; bz++) {
+        sumH += surfaceHeight(swx + bx, swz + bz);
+        countH++;
+      }
+    }
+    const avgH = Math.round(sumH / countH);
+    // Balanced base level that smoothly bridges local terrain and center level
+    const sBaseY = Math.round((avgH * 2 + centerBaseY) / 3);
+    buildingBaseHeights.push({ swx, swz, sBaseY, offsetDx: slot.offsetDx, offsetDz: slot.offsetDz });
 
     placeSchematicWithFoundation(layout, swx, sBaseY, swz, slot.schematic);
     layout.structures.push({ type: slot.schematic.name, x: swx, y: sBaseY, z: swz });
@@ -167,7 +179,7 @@ export function getVillageLayout(vcx, vcz) {
     }
   }
 
-  // ── 5. Farmer at crop fields ───────────────────────────────────────────────
+  // ── 4. Farmer villagers for crop fields ──────────────────────────────────
   layout.villagers.push({
     profession: 'farmer',
     x: centerWx + 8,
@@ -175,7 +187,7 @@ export function getVillageLayout(vcx, vcz) {
     z: centerWz + 14,
     homeX: centerWx + 16,
     homeY: centerBaseY + 1,
-    homeZ: centerWz + 5,
+    homeZ: centerWz + 6,
     workX: centerWx + 8,
     workY: centerBaseY + 1,
     workZ: centerWz + 14,
@@ -190,7 +202,7 @@ export function getVillageLayout(vcx, vcz) {
     z: centerWz + 14,
     homeX: centerWx - 18,
     homeY: centerBaseY + 1,
-    homeZ: centerWz + 5,
+    homeZ: centerWz + 6,
     workX: centerWx - 12,
     workY: centerBaseY + 1,
     workZ: centerWz + 14,
@@ -199,60 +211,103 @@ export function getVillageLayout(vcx, vcz) {
     wellZ: centerWz
   });
 
-  // ── 5. Cardinal Gravel Pathways — stamped LAST so they always override buildings & perimeter ──
+  // ── 5. Smooth Road Network & Connecting Sidewalk Spurs ───────────────────
+  // Stamped LAST to guarantee flat gravel with 4-block air clearance and no floating gaps
+  const pathColumns = new Map(); // key: "wx,wz" -> target pathY
+
+  // 5A: 4 Main Cardinal Boulevards (3 blocks wide)
   const pathDefs = [
-    { dx: 1,  dz: 0,  length: VILLAGE_RADIUS },
-    { dx: -1, dz: 0,  length: VILLAGE_RADIUS },
-    { dx: 0,  dz: 1,  length: VILLAGE_RADIUS },
-    { dx: 0,  dz: -1, length: VILLAGE_RADIUS }
+    { dx: 1,  dz: 0,  length: VILLAGE_RADIUS },  // East
+    { dx: -1, dz: 0,  length: VILLAGE_RADIUS },  // West
+    { dx: 0,  dz: 1,  length: VILLAGE_RADIUS },  // South
+    { dx: 0,  dz: -1, length: VILLAGE_RADIUS }   // North
   ];
 
-  // Pass 1: Compute smooth heights for all 2D path columns (pathWx, pathWz)
-  const pathColumns = new Map(); // key: "pathWx,pathWz" -> target pathY
   for (const p of pathDefs) {
+    const endX = centerWx + p.dx * p.length;
+    const endZ = centerWz + p.dz * p.length;
     const startH = centerBaseY;
-    const endH = surfaceHeight(centerWx + p.dx * p.length, centerWz + p.dz * p.length);
-    for (let step = 1; step <= p.length; step++) {
+    const endH = surfaceHeight(endX, endZ);
+
+    for (let step = 0; step <= p.length; step++) {
       const t = step / p.length;
-      const interpY = Math.round(startH + (endH - startH) * t);
-      const terrainY = surfaceHeight(centerWx + p.dx * step, centerWz + p.dz * step);
-      const pathY = Math.max(interpY, terrainY);
+      // Smooth linear gradient between center and perimeter gate
+      const targetY = Math.round(startH + (endH - startH) * t);
       const px = centerWx + p.dx * step;
       const pz = centerWz + p.dz * step;
+
+      // 3-block wide roadbed
       for (let pw = -1; pw <= 1; pw++) {
         const pathWx = (p.dx === 0) ? px + pw : px;
         const pathWz = (p.dz === 0) ? pz + pw : pz;
         const colKey = `${pathWx},${pathWz}`;
         if (pathColumns.has(colKey)) {
-          // If already mapped (e.g. intersection near center), choose consistent max height
-          pathColumns.set(colKey, Math.max(pathColumns.get(colKey), pathY));
+          pathColumns.set(colKey, Math.max(pathColumns.get(colKey), targetY));
         } else {
-          pathColumns.set(colKey, pathY);
+          pathColumns.set(colKey, targetY);
         }
       }
     }
   }
 
-  // Pass 2: Stamp gravel, clear air above, and place foundation below
+  // 5B: Connecting Sidewalk Spurs to Every House Door
+  for (const b of buildingBaseHeights) {
+    const doorWx = b.swx;
+    const doorWz = b.swz - 1; // porch step outside front door
+    const doorY = b.sBaseY - 1; // porch height
+
+    // Connect from house porch to the nearest main boulevard
+    if (Math.abs(b.offsetDx) >= Math.abs(b.offsetDz)) {
+      // House is along East/West arm -> connect along Z to centerWz
+      const zMin = Math.min(doorWz, centerWz);
+      const zMax = Math.max(doorWz, centerWz);
+      const mainRoadY = pathColumns.get(`${doorWx},${centerWz}`) || centerBaseY;
+
+      for (let z = zMin; z <= zMax; z++) {
+        const t = (z - zMin) / Math.max(1, zMax - zMin);
+        const spurY = Math.round(mainRoadY + (doorY - mainRoadY) * t);
+        for (let pw = 0; pw <= 1; pw++) {
+          const colKey = `${doorWx + pw},${z}`;
+          pathColumns.set(colKey, spurY);
+        }
+      }
+    } else {
+      // House is along North/South arm -> connect along X to centerWx
+      const xMin = Math.min(doorWx, centerWx);
+      const xMax = Math.max(doorWx, centerWx);
+      const mainRoadY = pathColumns.get(`${centerWx},${doorWz}`) || centerBaseY;
+
+      for (let x = xMin; x <= xMax; x++) {
+        const t = (x - xMin) / Math.max(1, xMax - xMin);
+        const spurY = Math.round(mainRoadY + (doorY - mainRoadY) * t);
+        for (let pw = 0; pw <= 1; pw++) {
+          const colKey = `${x},${doorWz + pw}`;
+          pathColumns.set(colKey, spurY);
+        }
+      }
+    }
+  }
+
+  // 5C: Stamp All Pathways (Gravel + 4 Air Clearance + Deep Solid Foundation)
   for (const [colKey, pathY] of pathColumns) {
     const [xStr, zStr] = colKey.split(',');
     const pathWx = parseInt(xStr, 10);
     const pathWz = parseInt(zStr, 10);
+    const terrainH = surfaceHeight(pathWx, pathWz);
 
-    // Set single gravel block at path surface
+    // Surface block = Gravel
     layout.voxels.set(`${pathWx},${pathY},${pathWz}`, 27);
 
-    // Air corridor above — explicitly set Y+1..Y+4 to 0 (Air)
+    // 4-block vertical air corridor above path
     for (let ay = 1; ay <= 4; ay++) {
       layout.voxels.set(`${pathWx},${pathY + ay},${pathWz}`, 0);
     }
 
-    // Solid cobble foundation below down to 4 blocks
-    for (let fy = pathY - 1; fy >= pathY - 4; fy--) {
-      const fk = `${pathWx},${fy},${pathWz}`;
-      if (!layout.voxels.has(fk) || layout.voxels.get(fk) === 0 || layout.voxels.get(fk) === 27) {
-        layout.voxels.set(fk, 15);
-      }
+    // Solid cobblestone foundation filled ALL THE WAY DOWN to natural terrain
+    // Ensures zero floating gaps or dangerous dropoffs over valleys/dips
+    const bottomFy = Math.max(1, Math.min(terrainH - 2, pathY - 10));
+    for (let fy = pathY - 1; fy >= bottomFy; fy--) {
+      layout.voxels.set(`${pathWx},${fy},${pathWz}`, 15); // Cobblestone
     }
   }
 
@@ -261,94 +316,104 @@ export function getVillageLayout(vcx, vcz) {
 }
 
 /**
- * Builds a 2-block-high perimeter wall around the village
- * with 4 fortified gatehouses at the cardinal compass gates
+ * Builds a ground-anchored 2-block-high cobblestone perimeter wall
+ * with 4 fortified gatehouses at the cardinal entrances.
+ * Fully filled into the ground so it never floats.
  */
 function buildPerimeterWall(layout, cx, baseY, cz) {
   const R = VILLAGE_RADIUS;
 
-  // Walk the perimeter rectangle, build wall & leave gateway openings
+  // 1. North and South edges
   for (let dx = -R; dx <= R; dx++) {
-    for (let side = -1; side <= 1; side += 2) {
+    for (const side of [-1, 1]) {
       const wx = cx + dx;
       const wz = cz + side * R;
-      const wy = Math.max(baseY, surfaceHeight(wx, wz));
-
-      // Gate opening: leave 3-block gap on N/S cardinal paths (dx -1..1)
       const isGate = (Math.abs(dx) <= 1);
+      const isCorner = (Math.abs(dx) === R);
+      if (isCorner) continue; // Handled below
+
+      const groundY = surfaceHeight(wx, wz);
+
       if (isGate) {
-        buildGatehouse(layout, wx, wy, wz, 'ns');
+        // Gate passage: gravel roadbed, open passage, arch header
+        for (let fy = groundY; fy >= Math.max(1, groundY - 6); fy--) {
+          layout.voxels.set(`${wx},${fy},${wz}`, 15); // Cobble foundation
+        }
+        layout.voxels.set(`${wx},${groundY},${wz}`, 27);     // Gravel
+        layout.voxels.set(`${wx},${groundY + 1},${wz}`, 0); // Air passage
+        layout.voxels.set(`${wx},${groundY + 2},${wz}`, 0); // Air passage
+        layout.voxels.set(`${wx},${groundY + 3},${wz}`, 5); // Oak Log Arch header
+        if (dx === 0) {
+          layout.voxels.set(`${wx},${groundY + 4},${wz}`, 20); // Torch atop arch
+        }
       } else {
-        placeWallColumn(layout, wx, wy, wz);
+        // Wall column anchored directly to terrain with deep foundation
+        for (let fy = groundY; fy >= Math.max(1, groundY - 6); fy--) {
+          layout.voxels.set(`${wx},${fy},${wz}`, 15); // Cobble foundation into ground
+        }
+        layout.voxels.set(`${wx},${groundY + 1},${wz}`, 15); // Cobble wall lower
+        layout.voxels.set(`${wx},${groundY + 2},${wz}`, 15); // Cobble wall upper
+        layout.voxels.set(`${wx},${groundY + 3},${wz}`, 7);  // Oak Plank top trim
+        layout.voxels.set(`${wx},${groundY + 4},${wz}`, 0);  // Air
       }
     }
   }
+
+  // 2. East and West edges
   for (let dz = -R + 1; dz <= R - 1; dz++) {
-    for (let side = -1; side <= 1; side += 2) {
+    for (const side of [-1, 1]) {
       const wx = cx + side * R;
       const wz = cz + dz;
-      const wy = Math.max(baseY, surfaceHeight(wx, wz));
-
       const isGate = (Math.abs(dz) <= 1);
+      const groundY = surfaceHeight(wx, wz);
+
       if (isGate) {
-        buildGatehouse(layout, wx, wy, wz, 'ew');
+        for (let fy = groundY; fy >= Math.max(1, groundY - 6); fy--) {
+          layout.voxels.set(`${wx},${fy},${wz}`, 15);
+        }
+        layout.voxels.set(`${wx},${groundY},${wz}`, 27);
+        layout.voxels.set(`${wx},${groundY + 1},${wz}`, 0);
+        layout.voxels.set(`${wx},${groundY + 2},${wz}`, 0);
+        layout.voxels.set(`${wx},${groundY + 3},${wz}`, 5);
+        if (dz === 0) {
+          layout.voxels.set(`${wx},${groundY + 4},${wz}`, 20);
+        }
       } else {
-        placeWallColumn(layout, wx, wy, wz);
+        for (let fy = groundY; fy >= Math.max(1, groundY - 6); fy--) {
+          layout.voxels.set(`${wx},${fy},${wz}`, 15);
+        }
+        layout.voxels.set(`${wx},${groundY + 1},${wz}`, 15);
+        layout.voxels.set(`${wx},${groundY + 2},${wz}`, 15);
+        layout.voxels.set(`${wx},${groundY + 3},${wz}`, 7);
+        layout.voxels.set(`${wx},${groundY + 4},${wz}`, 0);
       }
     }
   }
 
-  // Corner pillars (slightly taller)
+  // 3. Corner Watch Pillars (taller with torches)
   for (const [ddx, ddz] of [[-R, -R], [R, -R], [-R, R], [R, R]]) {
     const cwx = cx + ddx;
     const cwz = cz + ddz;
-    const cwy = Math.max(baseY, surfaceHeight(cwx, cwz));
-    for (let y = cwy; y <= cwy + 3; y++) {
-      layout.voxels.set(`${cwx},${y},${cwz}`, 15); // Cobble corner pillars
+    const groundY = surfaceHeight(cwx, cwz);
+    for (let fy = groundY; fy >= Math.max(1, groundY - 8); fy--) {
+      layout.voxels.set(`${cwx},${fy},${cwz}`, 15);
     }
-    layout.voxels.set(`${cwx},${cwy + 4},${cwz}`, 20); // Torch on top
+    layout.voxels.set(`${cwx},${groundY + 1},${cwz}`, 15);
+    layout.voxels.set(`${cwx},${groundY + 2},${cwz}`, 15);
+    layout.voxels.set(`${cwx},${groundY + 3},${cwz}`, 15);
+    layout.voxels.set(`${cwx},${groundY + 4},${cwz}`, 15);
+    layout.voxels.set(`${cwx},${groundY + 5},${cwz}`, 20); // Torch
   }
 }
 
 /**
- * Places a single 2-high cobblestone wall segment topped with an oak fence
- */
-function placeWallColumn(layout, wx, baseWy, wz) {
-  // Layer 0 = solid cobble base
-  layout.voxels.set(`${wx},${baseWy},${wz}`, 15);
-  // Layer 1 = cobble upper
-  layout.voxels.set(`${wx},${baseWy + 1},${wz}`, 15);
-  // Layer 2 = oak fence crenellation
-  layout.voxels.set(`${wx},${baseWy + 2},${wz}`, 0); // will be set by FENCE_ID below
-  // Use a simple plank since fence IDs are dynamic; represent as oak plank trim
-  layout.voxels.set(`${wx},${baseWy + 2},${wz}`, 7); // Oak Plank top
-}
-
-/**
- * Places a gatehouse archway at gateway positions
- * Leaves a 3-block opening at ground level for the road
- */
-function buildGatehouse(layout, wx, baseWy, wz, axis) {
-  // Vertical archway pillars on the sides of the gate opening
-  // Air for gate passage
-  layout.voxels.set(`${wx},${baseWy},${wz}`, 0);   // ground = passable
-  layout.voxels.set(`${wx},${baseWy + 1},${wz}`, 0); // head height = passable
-  // Archway cap
-  layout.voxels.set(`${wx},${baseWy + 2},${wz}`, 5);  // Oak Log header
-  // Torch on archway cap
-  if (axis === 'ns' && wx % 3 === 0) {
-    layout.voxels.set(`${wx},${baseWy + 3},${wz}`, 20); // Torch
-  }
-}
-
-/**
- * Places a schematic and builds solid cobblestone/dirt foundations down to ground level.
- * Critically: clears the full 3D interior bounding box to AIR first.
+ * Places a schematic with full interior air purge and deep foundation pads.
+ * Guarantees zero terrain intrusion into rooms and zero floating foundations.
  */
 function placeSchematicWithFoundation(layout, originWx, originBaseY, originWz, schematic) {
   if (!schematic || !Array.isArray(schematic.blocks)) return;
 
-  // ── Step 1: Determine schematic bounding box ────────────────────────────
+  // ── Step 1: Calculate bounding box ───────────────────────────────────────
   let minDx = Infinity, maxDx = -Infinity;
   let minDy = Infinity, maxDy = -Infinity;
   let minDz = Infinity, maxDz = -Infinity;
@@ -361,12 +426,11 @@ function placeSchematicWithFoundation(layout, originWx, originBaseY, originWz, s
     if (b.dz > maxDz) maxDz = b.dz;
   }
 
-  // ── Step 2: Full interior bounding-box AIR purge ─────────────────────────
-  // Clears all existing terrain (hills, trees, caves) from inside the building volume
-  // Extra +2 clearance above to remove tree leaves/canopy
+  // ── Step 2: Interior Air Purge (from walking surface dy=0 to roof top dy=maxDy+4) ──
+  // Carves clean flat volume out of any hill or tree canopy
   for (let dx = minDx - 1; dx <= maxDx + 1; dx++) {
     for (let dz = minDz - 1; dz <= maxDz + 1; dz++) {
-      for (let dy = -2; dy <= maxDy + 3; dy++) {
+      for (let dy = 0; dy <= maxDy + 4; dy++) {
         const wx = originWx + dx;
         const wz = originWz + dz;
         const wy = Math.max(1, Math.min(HEIGHT - 1, originBaseY + dy));
@@ -375,19 +439,16 @@ function placeSchematicWithFoundation(layout, originWx, originBaseY, originWz, s
     }
   }
 
-  // ── Step 3: Solid cobblestone foundation pad ─────────────────────────────
-  // Level the entire footprint footprint down to ground level with cobble
+  // ── Step 3: Deep Solid Cobblestone Foundation Pad ────────────────────────
+  // Extends from floor foundation (originBaseY - 1) all the way down into terrain
   for (let dx = minDx; dx <= maxDx; dx++) {
     for (let dz = minDz; dz <= maxDz; dz++) {
       const wx = originWx + dx;
       const wz = originWz + dz;
-      const terrainY = Math.max(1, surfaceHeight(wx, wz));
-      const buildY = originBaseY; // target floor level
-      // Fill gap between terrain and floor level
-      for (let fy = Math.min(terrainY, buildY) - 1; fy <= Math.max(terrainY, buildY) - 1; fy++) {
-        const clampedFy = Math.max(1, Math.min(HEIGHT - 1, fy));
-        const fk = `${wx},${clampedFy},${wz}`;
-        layout.voxels.set(fk, 15); // Cobble foundation
+      const terrainY = surfaceHeight(wx, wz);
+      const bottomFy = Math.max(1, Math.min(terrainY - 2, originBaseY - 12));
+      for (let fy = originBaseY - 1; fy >= bottomFy; fy--) {
+        layout.voxels.set(`${wx},${fy},${wz}`, 15); // Cobble foundation
       }
     }
   }
