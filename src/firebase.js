@@ -145,7 +145,7 @@ async function handleSyncOnLogin(uid, onStatusChange, onSyncConflict) {
     const docSnap = await getDoc(userDocRef);
 
     if (docSnap.exists()) {
-      const cloudData = docSnap.data();
+      const cloudData = unpackPayloadFromFirestore(docSnap.data());
       sessionStorage.setItem('cloud_save_pending', JSON.stringify(cloudData));
       sessionStorage.setItem('sync_resolved', 'true');
       window.__cloudWorldData = cloudData;
@@ -240,12 +240,55 @@ function sanitizePayload(obj) {
   return clean;
 }
 
+export function packPayloadForFirestore(payload) {
+  if (!payload || typeof payload !== 'object') return payload;
+  const cleanPayload = sanitizePayload(payload);
+  if (!cleanPayload || typeof cleanPayload !== 'object') return cleanPayload;
+
+  // Serialize high-volume map structures to single JSON strings to avoid hitting Firestore 40,000 index entry limit
+  if (cleanPayload.edits && typeof cleanPayload.edits === 'object') {
+    cleanPayload.editsStr = JSON.stringify(cleanPayload.edits);
+    delete cleanPayload.edits;
+  }
+  if (cleanPayload.chests && typeof cleanPayload.chests === 'object') {
+    cleanPayload.chestsStr = JSON.stringify(cleanPayload.chests);
+    delete cleanPayload.chests;
+  }
+  if (cleanPayload.furnaces && typeof cleanPayload.furnaces === 'object') {
+    cleanPayload.furnacesStr = JSON.stringify(cleanPayload.furnaces);
+    delete cleanPayload.furnaces;
+  }
+  if (cleanPayload.crops && typeof cleanPayload.crops === 'object') {
+    cleanPayload.cropsStr = JSON.stringify(cleanPayload.crops);
+    delete cleanPayload.crops;
+  }
+  return cleanPayload;
+}
+
+export function unpackPayloadFromFirestore(cloudData) {
+  if (!cloudData || typeof cloudData !== 'object') return cloudData;
+  const unpacked = { ...cloudData };
+  if (unpacked.editsStr && typeof unpacked.editsStr === 'string') {
+    try { unpacked.edits = JSON.parse(unpacked.editsStr); } catch (e) { unpacked.edits = {}; }
+  }
+  if (unpacked.chestsStr && typeof unpacked.chestsStr === 'string') {
+    try { unpacked.chests = JSON.parse(unpacked.chestsStr); } catch (e) { unpacked.chests = {}; }
+  }
+  if (unpacked.furnacesStr && typeof unpacked.furnacesStr === 'string') {
+    try { unpacked.furnaces = JSON.parse(unpacked.furnacesStr); } catch (e) { unpacked.furnaces = {}; }
+  }
+  if (unpacked.cropsStr && typeof unpacked.cropsStr === 'string') {
+    try { unpacked.crops = JSON.parse(unpacked.cropsStr); } catch (e) { unpacked.crops = {}; }
+  }
+  return unpacked;
+}
+
 export async function saveWorldToCloud(payload) {
   if (!db || !currentUser) return;
   try {
-    const cleanPayload = sanitizePayload(payload);
+    const packedPayload = packPayloadForFirestore(payload);
     const userDocRef = doc(db, 'users', currentUser.uid);
-    await setDoc(userDocRef, cleanPayload, { merge: true });
+    await setDoc(userDocRef, packedPayload, { merge: true });
     console.log("Cloud save updated successfully in Firestore.");
   } catch (error) {
     console.error("Cloud save failed:", error);
@@ -684,7 +727,8 @@ export function subscribeToRoomWorld(roomId, callback) {
   const roomRef = doc(db, 'rooms', roomId);
   return onSnapshot(roomRef, (snap) => {
     if (snap.exists()) {
-      callback(snap.data());
+      const data = unpackPayloadFromFirestore(snap.data());
+      callback(data);
     }
   }, (err) => {
     console.warn("Room world listener error:", err);
@@ -694,9 +738,9 @@ export function subscribeToRoomWorld(roomId, callback) {
 export async function saveRoomWorldToCloud(roomId, payload) {
   if (!db || !roomId) return;
   try {
-    const cleanPayload = sanitizePayload(payload);
+    const packedPayload = packPayloadForFirestore(payload);
     const roomRef = doc(db, 'rooms', roomId);
-    await setDoc(roomRef, cleanPayload, { merge: true });
+    await setDoc(roomRef, packedPayload, { merge: true });
   } catch (err) {
     console.error("Cloud room save failed:", err);
   }

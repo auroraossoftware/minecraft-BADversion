@@ -305,7 +305,22 @@ export function loadWorld() {
   try {
     // Load exclusively from cloud payload buffer (sessionStorage / in-memory window)
     const rawPending = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('cloud_save_pending') : null;
-    const p = rawPending ? JSON.parse(rawPending) : (window.__cloudWorldData || null);
+    let p = rawPending ? JSON.parse(rawPending) : (window.__cloudWorldData || null);
+    if (!p) return;
+
+    if (p.editsStr && typeof p.editsStr === 'string') {
+      try { p.edits = JSON.parse(p.editsStr); } catch (e) { p.edits = {}; }
+    }
+    if (p.chestsStr && typeof p.chestsStr === 'string') {
+      try { p.chests = JSON.parse(p.chestsStr); } catch (e) { p.chests = {}; }
+    }
+    if (p.furnacesStr && typeof p.furnacesStr === 'string') {
+      try { p.furnaces = JSON.parse(p.furnacesStr); } catch (e) { p.furnaces = {}; }
+    }
+    if (p.cropsStr && typeof p.cropsStr === 'string') {
+      try { p.crops = JSON.parse(p.cropsStr); } catch (e) { p.crops = {}; }
+    }
+
     const normalizeKeys = (obj) => {
       if (!obj || typeof obj !== 'object') return {};
       const res = {};
