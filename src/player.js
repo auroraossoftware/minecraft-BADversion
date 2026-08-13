@@ -11,6 +11,7 @@ import {
 } from './ui.js';
 import { playHitSound, playFootstepSound } from './audio.js';
 import { activeNavigation, clearActiveNavigation } from './pathfinder.js';
+import { getVillageAreaInfo } from './villageGenerator.js';
 
 const GRAV = -26;
 const JUMP = 8.4;
@@ -537,6 +538,21 @@ export function updatePlayer(dt){
     emitCosmeticTrailParticle(player.pos.x, player.pos.y, player.pos.z, game.particleTrail);
   }
   updateCosmeticParticles(dt);
+
+  // Village & District Area Detection Toast
+  player._areaCheckTimer = (player._areaCheckTimer || 0) + dt;
+  if (player._areaCheckTimer >= 0.5) {
+    player._areaCheckTimer = 0;
+    const areaInfo = getVillageAreaInfo(player.pos.x, player.pos.z);
+    const areaKey = areaInfo ? `${areaInfo.icon} ${areaInfo.name}` : null;
+    if (areaKey !== player._currentAreaKey) {
+      player._currentAreaKey = areaKey;
+      if (areaKey) {
+        toast(`📍 Entered: ${areaKey}`);
+        if (typeof window !== 'undefined') window.__currentAreaName = areaKey;
+      }
+    }
+  }
 
   // Void handling
   if(player.pos.y < -30){

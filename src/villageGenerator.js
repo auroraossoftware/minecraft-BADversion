@@ -178,25 +178,26 @@ export function getVillageLayout(vcx, vcz) {
   // ── 3. Perimeter Boundary Wall & 4 Fortified Gatehouses ──────────────────
   buildPerimeterWall(layout, centerWx, centerBaseY, centerWz);
 
-  // ── 4. Buildings & Farmland along Flat Boulevards ─────────────────────────
+  // ── 4. Buildings & Farmland along Flat Boulevards (Non-Overlapping Grid) ──
   const buildingSlots = [
-    // East arm
-    { offsetDx: 15,  offsetDz: 6,   schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
-    { offsetDx: 15,  offsetDz: -10, schematic: getBlacksmithWorkshopSchematic(),    profession: 'blacksmith' },
-    // West arm
-    { offsetDx: -17, offsetDz: 6,   schematic: getLargeTwoStoryHouseSchematic(),    profession: 'librarian' },
-    { offsetDx: -17, offsetDz: -10, schematic: getLibrarianHouseSchematic(),        profession: 'librarian' },
-    // South arm
-    { offsetDx: 6,   offsetDz: 15,  schematic: getClericShrineSchematic(),          profession: 'cleric' },
-    { offsetDx: -8,  offsetDz: 15,  schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
-    // North arm
-    { offsetDx: 6,   offsetDz: -17, schematic: getSmallOakCottageSchematic(),       profession: 'unemployed' },
-    { offsetDx: -8,  offsetDz: -17, schematic: getLargeTwoStoryHouseSchematic(),    profession: 'unemployed' },
-    // Farmland plots
-    { offsetDx: 8,   offsetDz: 13,  schematic: getStandardCropStripSchematic(),     profession: null },
-    { offsetDx: -12, offsetDz: 13,  schematic: getDoubleTrenchFieldSchematic(),     profession: null },
-    { offsetDx: 8,   offsetDz: -15, schematic: getBackyardGardenSchematic(),        profession: null },
-    { offsetDx: -12, offsetDz: -15, schematic: getTerracedFarmlandSchematic(),      profession: null },
+    // North-East Quadrant: Blacksmith Workshop & Backyard Garden
+    { offsetDx: 14,  offsetDz: -14, schematic: getBlacksmithWorkshopSchematic(), profession: 'blacksmith' },
+    { offsetDx: 14,  offsetDz: -5,  schematic: getBackyardGardenSchematic(),     profession: null },
+
+    // South-East Quadrant: Small Oak Cottage, Cleric Shrine & Standard Wheat Field
+    { offsetDx: 14,  offsetDz: 12,  schematic: getSmallOakCottageSchematic(),    profession: 'unemployed' },
+    { offsetDx: 14,  offsetDz: 22,  schematic: getClericShrineSchematic(),       profession: 'cleric' },
+    { offsetDx: 14,  offsetDz: 5,   schematic: getStandardCropStripSchematic(),  profession: null },
+
+    // North-West Quadrant: Librarian Great Library, Two-Story House & Terraced Farmland
+    { offsetDx: -15, offsetDz: -14, schematic: getLibrarianHouseSchematic(),     profession: 'librarian' },
+    { offsetDx: -15, offsetDz: -24, schematic: getLargeTwoStoryHouseSchematic(), profession: 'unemployed' },
+    { offsetDx: -15, offsetDz: -5,  schematic: getTerracedFarmlandSchematic(),   profession: null },
+
+    // South-West Quadrant: Two-Story House, Small Oak Cottage & Double Trench Field
+    { offsetDx: -15, offsetDz: 14,  schematic: getLargeTwoStoryHouseSchematic(), profession: 'unemployed' },
+    { offsetDx: -15, offsetDz: 24,  schematic: getSmallOakCottageSchematic(),    profession: 'unemployed' },
+    { offsetDx: -15, offsetDz: 5,   schematic: getDoubleTrenchFieldSchematic(),  profession: null },
   ];
 
   const buildingBaseHeights = [];
@@ -230,33 +231,33 @@ export function getVillageLayout(vcx, vcz) {
     }
   }
 
-  // ── 5. Farmer villagers for crop fields ──────────────────────────────────
+  // ── 5. Farmer villagers for dedicated crop plots ─────────────────────────
   layout.villagers.push({
     profession: 'farmer',
-    x: centerWx + 8,
+    x: centerWx + 14,
     y: centerBaseY + 1,
-    z: centerWz + 13,
-    homeX: centerWx + 15,
+    z: centerWz + 5,
+    homeX: centerWx + 14,
     homeY: centerBaseY + 1,
-    homeZ: centerWz + 6,
-    workX: centerWx + 8,
+    homeZ: centerWz + 12,
+    workX: centerWx + 14,
     workY: centerBaseY + 1,
-    workZ: centerWz + 13,
+    workZ: centerWz + 5,
     wellX: centerWx,
     wellY: centerBaseY + 1,
     wellZ: centerWz
   });
   layout.villagers.push({
     profession: 'farmer',
-    x: centerWx - 12,
+    x: centerWx - 15,
     y: centerBaseY + 1,
-    z: centerWz + 13,
-    homeX: centerWx - 17,
+    z: centerWz - 5,
+    homeX: centerWx - 15,
     homeY: centerBaseY + 1,
-    homeZ: centerWz + 6,
-    workX: centerWx - 12,
+    homeZ: centerWz - 24,
+    workX: centerWx - 15,
     workY: centerBaseY + 1,
-    workZ: centerWz + 13,
+    workZ: centerWz - 5,
     wellX: centerWx,
     wellY: centerBaseY + 1,
     wellZ: centerWz
@@ -640,3 +641,50 @@ export function isVillageProtectedZone(wx, wz) {
   }
   return false;
 }
+
+/**
+ * Returns descriptive identification metadata for the current village area or structure
+ * at (wx, wz) for in-game HUD banners and discovery toasts.
+ */
+export function getVillageAreaInfo(wx, wz) {
+  for (const [, layout] of villageLayoutCache) {
+    if (!layout || layout.voxels.size === 0) continue;
+    const dx = wx - layout.centerWx;
+    const dz = wz - layout.centerWz;
+    if (Math.abs(dx) <= VILLAGE_RADIUS + 2 && Math.abs(dz) <= VILLAGE_RADIUS + 2) {
+      // 1. Check if near Central Well / Town Square
+      if (Math.hypot(dx, dz) <= 5.5) {
+        return { name: "Town Square Plaza", icon: "⛲", type: "plaza" };
+      }
+
+      // 2. Check individual building bounding volumes
+      for (const s of layout.structures) {
+        const bdx = Math.abs(wx - s.x);
+        const bdz = Math.abs(wz - s.z);
+        if (s.type === 'Blacksmith Workshop' && bdx <= 4 && bdz <= 5) {
+          return { name: "Blacksmith's Forge", icon: "🛡️", type: "blacksmith" };
+        }
+        if (s.type === 'Librarian House' && bdx <= 4 && bdz <= 5) {
+          return { name: "The Great Library", icon: "📚", type: "library" };
+        }
+        if (s.type === 'Cleric Shrine' && bdx <= 3 && bdz <= 3) {
+          return { name: "Cleric Shrine", icon: "⛪", type: "shrine" };
+        }
+        if (s.type === 'Large Two-Story House' && bdx <= 5 && bdz <= 5) {
+          return { name: "Two-Story Manor", icon: "🏰", type: "manor" };
+        }
+        if (s.type === 'Small Oak Cottage' && bdx <= 4 && bdz <= 4) {
+          return { name: "Oak Cottage", icon: "🏡", type: "cottage" };
+        }
+        if ((s.type.includes('Crop') || s.type.includes('Garden') || s.type.includes('Farmland') || s.type.includes('Field')) && bdx <= 5 && bdz <= 6) {
+          return { name: "Village Farmlands", icon: "🌾", type: "farmland" };
+        }
+      }
+
+      // 3. Fallback: general village district
+      return { name: "Oakvale Village", icon: "🏘️", type: "village" };
+    }
+  }
+  return null;
+}
+
