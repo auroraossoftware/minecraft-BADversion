@@ -526,10 +526,10 @@ function placeSchematicWithFoundation(layout, originWx, originBaseY, originWz, s
     if (b.dz > maxDz) maxDz = b.dz;
   }
 
-  // ── Step 2: Interior Air Purge (dy = 0 to roof top dy = maxDy + 4) ────────
+  // ── Step 2: Interior Air Purge (dy = 1 to roof top dy = maxDy + 4) ────────
   for (let dx = minDx - 1; dx <= maxDx + 1; dx++) {
     for (let dz = minDz - 1; dz <= maxDz + 1; dz++) {
-      for (let dy = 0; dy <= maxDy + 4; dy++) {
+      for (let dy = 1; dy <= maxDy + 4; dy++) {
         const wx = originWx + dx;
         const wz = originWz + dz;
         const wy = Math.max(1, Math.min(HEIGHT - 1, originBaseY + dy));

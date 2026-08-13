@@ -2180,10 +2180,10 @@ async function runFullTestSuite() {
     test("Small Oak Cottage schematic has name, blocks, and doorway gap", () => {
       const s = villageHouses.getSmallOakCottageSchematic();
       if (!s.name || !Array.isArray(s.blocks) || s.blocks.length === 0) throw new Error("Cottage schematic invalid");
-      const door0 = s.blocks.find(b => b.dx === 0 && b.dy === 0 && b.dz === 0 && b.id === 0);
-      if (!door0) throw new Error("Cottage missing door air block at (0,0,0)");
-      const door1 = s.blocks.find(b => b.dx === 0 && b.dy === 1 && b.dz === 0 && b.id === 0);
-      if (!door1) throw new Error("Cottage missing door air block at (0,1,0)");
+      const door0 = s.blocks.find(b => b.dx === 0 && b.dy === 1 && b.dz === 0 && b.id === 0);
+      if (!door0) throw new Error("Cottage missing door air block at (0,1,0)");
+      const door1 = s.blocks.find(b => b.dx === 0 && b.dy === 2 && b.dz === 0 && b.id === 0);
+      if (!door1) throw new Error("Cottage missing door air block at (0,2,0)");
     });
 
     test("Small Oak Cottage schematic has glass windows", () => {
@@ -2202,8 +2202,8 @@ async function runFullTestSuite() {
 
     test("Small Oak Cottage schematic has porch step blocks (dz=-1)", () => {
       const s = villageHouses.getSmallOakCottageSchematic();
-      const hasPorch = s.blocks.some(b => b.dz === -1 && b.dy === -1);
-      if (!hasPorch) throw new Error("Cottage missing porch steps (dz=-1, dy=-1)");
+      const hasPorch = s.blocks.some(b => b.dz === -1 && b.dy === 0);
+      if (!hasPorch) throw new Error("Cottage missing porch steps (dz=-1, dy=0)");
     });
 
     test("Blacksmith Workshop schematic has market pedestal (ID 95)", () => {
@@ -2225,7 +2225,7 @@ async function runFullTestSuite() {
 
     test("Large Two-Story House has bookshelves on upper floor (ID 44)", () => {
       const s = villageHouses.getLargeTwoStoryHouseSchematic();
-      const upperBookshelves = s.blocks.filter(b => b.id === 44 && b.dy >= 4);
+      const upperBookshelves = s.blocks.filter(b => b.id === 44 && b.dy >= 5);
       if (upperBookshelves.length === 0) throw new Error("Two-Story House missing upper floor bookshelves (ID 44)");
     });
 
