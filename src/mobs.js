@@ -366,7 +366,7 @@ export function tryFeedAnimal() {
   }
 
   if (removeItem(heldId, 1)) {
-    best.loveTimer = 20.0;
+      best.loveTimer = 20.0;
     playSheepSound();
     toast(`❤️ Fed ${best.def.name}! Entered Love Mode!`);
     return true;
@@ -374,12 +374,12 @@ export function tryFeedAnimal() {
   return false;
 }
 
-export function spawnMob(type, x, y, z, isBaby = false, parent = null){
+export function spawnMob(type, x, y, z, isBaby = false, parent = null, profession = 'unemployed'){
   if (!MOB_TYPES[type]) return null;
   if (!isFinite(x) || !isFinite(y) || !isFinite(z)) return null;
   if (game.mobs.length >= MAX_MOBS) return null;
   const def = { ...MOB_TYPES[type] };
-  const mesh = makeMobMesh(type);
+  const mesh = makeMobMesh(type, undefined, profession);
   mesh.position.set(x, y, z);
   const spawnYaw = Math.random() * Math.PI * 2;
   mesh.rotation.y = spawnYaw;
@@ -393,10 +393,14 @@ export function spawnMob(type, x, y, z, isBaby = false, parent = null){
     vel: new THREE.Vector3(),
     yaw: spawnYaw,
     hp: isBaby ? Math.ceil(def.hp / 2) : def.hp,
+    maxHp: def.hp,
+    dead: false,
+    wanderTimer: Math.random() * 4,
+    jumpCd: 0,
     onGround: false,
-    wanderTimer: 0,
-    fuseTimer: 0,
     attackCd: 0,
+    target: null,
+    lookT: Math.random() * 3,
     hurtFlash: 0,
     shootCd: 0,
     animPhase: Math.random() * 100,
@@ -450,7 +454,7 @@ export function spawnMob(type, x, y, z, isBaby = false, parent = null){
 
   if (type === 'villager') {
     // Merge createVillagerState fields into mob (comprehensive AI state)
-    const vState = createVillagerState(x, y, z, 'unemployed');
+    const vState = createVillagerState(x, y, z, profession);
     Object.assign(mob, vState);
     mob.pos = new THREE.Vector3(x, y, z); // restore THREE.Vector3 (createVillagerState uses its own)
     mob.vel = new THREE.Vector3(0, 0, 0);
@@ -471,7 +475,7 @@ if (typeof window !== 'undefined') {
                                     homeX, homeY, homeZ,
                                     workX, workY, workZ,
                                     wellX, wellY, wellZ) => {
-    const mob = spawnMob('villager', x, y, z);
+    const mob = spawnMob('villager', x, y, z, false, null, profession);
     if (!mob) return;
     mob.profession = profession || 'unemployed';
     mob.state = 'work';
