@@ -7,7 +7,7 @@ import {
   isSolid, isOpaque, tileFor, tileUV, trng, shade, TILE, ATLAS_COLS, ATLAS_ROWS, TILE_NAMES
 } from './config.js';
 
-import { applyVillageToChunk } from './villageGenerator.js';
+import { applyVillageToChunk, isVillageProtectedZone } from './villageGenerator.js';
 
 // Streaming queue & static meshing buffers
 export var genQueue = [];
@@ -106,8 +106,13 @@ function oreAt(wx,wy,wz){
 }
 
 function carveStructures(ch, ox, oz){
+  // Suppress cave carvers entirely inside village protected zones
+  const chunkCenterWx = ox + 8;
+  const chunkCenterWz = oz + 8;
+  if (isVillageProtectedZone(chunkCenterWx, chunkCenterWz)) return;
+
   const key=hash2(ch.cx, ch.cz, SEED+500);
-  // ~8% of chunks get a hidden cavern
+  // ~8% of non-village chunks get a hidden cavern
   if(key>0.92){
     const cxl=4+((hash2(ch.cx,ch.cz,1)*8)|0);
     const czl=4+((hash2(ch.cx,ch.cz,2)*8)|0);
@@ -172,8 +177,8 @@ export function generateChunk(ch){
         if(b!==AIR) ch.set(x,y,z,b);
       }
       
-      // trees
-      if(h>SEA+1 && ch.get(x,h,z)===1){
+      // trees — suppressed inside village protected zones
+      if(h>SEA+1 && ch.get(x,h,z)===1 && !isVillageProtectedZone(wx, wz)){
         const r = hash2(wx, wz, SEED+99);
         if(r>0.985 && x>1 && x<CHUNK-2 && z>1 && z<CHUNK-2){
           const th = 4 + Math.floor(hash2(wx,wz,7)*2);

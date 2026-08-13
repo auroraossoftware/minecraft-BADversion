@@ -1913,9 +1913,12 @@ async function runFullTestSuite() {
       test(`Villager Mob & AI test #${i} (${prof})`, () => {
         const vState = villagerMob.createVillagerState(i * 2, 40, i * 2, prof);
         if (vState.profession !== prof) throw new Error(`Mismatch profession: ${vState.profession}`);
-        villagerSchedule.updateVillagerSchedule(vState, 0.1, 0.5);
+        // Use morning work phase (0.35) — not noon/lunch (0.5)
+        villagerSchedule.updateVillagerSchedule(vState, 0.1, 0.35);
         if (vState.state !== 'work') throw new Error(`Schedule state error: ${vState.state}`);
-        villagerPanic.tickVillagerPanic(vState, 0.1, [{ type: 'zombie', pos: { x: i*2 + 2, y: 40, z: i*2 }, dead: false }]);
+        // Panic object needs pos with distanceTo (Three.js Vector3)
+        const threatPos = new THREE.Vector3(i*2 + 2, 40, i*2);
+        villagerPanic.tickVillagerPanic(vState, 0.1, [{ type: 'zombie', def: { hostile: true }, pos: threatPos, dead: false }]);
         if (vState.state !== 'panic') throw new Error(`Panic state error: ${vState.state}`);
       });
     }
@@ -2027,7 +2030,10 @@ async function runFullTestSuite() {
       }
 
       // 3. Special/State blocks (bedrock 30, redstone wire 60, piston head 65, farmland 89, crops 90-92)
-      const stateBlockIds = new Set([30, 60, 65, 89, 90, 91, 92]);
+      // Special/State/Schematic blocks (bedrock 30, redstone 60, piston head 65, farmland 89,
+      // crops 90-92; also village schematic blocks: birch/spruce wood (22,23), terracotta (36),
+      // market pedestal (95), and glass pane (49) placed in structures)
+      const stateBlockIds = new Set([22, 23, 30, 36, 49, 60, 65, 89, 90, 91, 92, 95]);
 
       for (const id of blockIds) {
         const isAccessible = generatedIds.has(id) || craftableIds.has(id) || stateBlockIds.has(id);
@@ -2059,6 +2065,558 @@ async function runFullTestSuite() {
       player.updatePlayer(0.016);
       if (state.player.fallPeak > 81) throw new Error(`fallPeak was not updated to current position: got ${state.player.fallPeak}`);
       state.keys["KeyF"] = false;
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // TEST SUITE 63: VILLAGE GENERATOR — LAYOUT & PERIMETER ENGINE
+    // ═══════════════════════════════════════════════════════════════════════
+    console.log("\n--- TEST SUITE 63: VILLAGE GENERATOR — LAYOUT & PERIMETER ENGINE ---");
+
+    test("isVillageCenterChunk identifies guaranteed starter village chunks", () => {
+      if (!villageGenerator.isVillageCenterChunk(1, 0)) throw new Error("(1,0) starter village not detected");
+      if (!villageGenerator.isVillageCenterChunk(2, 2)) throw new Error("(2,2) starter village not detected");
+      if (!villageGenerator.isVillageCenterChunk(-2, -2)) throw new Error("(-2,-2) starter village not detected");
+      if (!villageGenerator.isVillageCenterChunk(3, 3)) throw new Error("(3,3) starter village not detected");
+    });
+
+    test("isVillageCenterChunk rejects non-village chunks", () => {
+      if (villageGenerator.isVillageCenterChunk(0, 0)) throw new Error("(0,0) falsely identified as village");
+      if (villageGenerator.isVillageCenterChunk(5, 5)) throw new Error("(5,5) falsely identified as village");
+      if (villageGenerator.isVillageCenterChunk(100, 100)) throw new Error("(100,100) falsely identified as village");
+    });
+
+    test("getVillageLayout returns layout object with required fields", () => {
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      if (!layout) throw new Error("getVillageLayout returned null");
+      if (typeof layout.vcx !== 'number') throw new Error("layout.vcx missing");
+      if (typeof layout.vcz !== 'number') throw new Error("layout.vcz missing");
+      if (typeof layout.centerWx !== 'number') throw new Error("layout.centerWx missing");
+      if (typeof layout.centerWz !== 'number') throw new Error("layout.centerWz missing");
+      if (!(layout.voxels instanceof Map)) throw new Error("layout.voxels is not a Map");
+      if (!Array.isArray(layout.structures)) throw new Error("layout.structures is not an array");
+      if (!Array.isArray(layout.villagers)) throw new Error("layout.villagers is not an array");
+    });
+
+    test("getVillageLayout is deterministic (same result on repeated calls)", () => {
+      const l1 = villageGenerator.getVillageLayout(1, 0);
+      const l2 = villageGenerator.getVillageLayout(1, 0);
+      if (l1 !== l2) throw new Error("getVillageLayout is not cached — returned different objects for same coords");
+      if (l1.voxels.size !== l2.voxels.size) throw new Error("Village layout voxel maps differ between calls");
+    });
+
+    test("Village layout contains gravel pathway voxels (ID 27)", () => {
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      let hasGravel = false;
+      for (const [, blockId] of layout.voxels) {
+        if (blockId === 27) { hasGravel = true; break; }
+      }
+      if (!hasGravel) throw new Error("Village layout contains no gravel pathway blocks (ID 27)");
+    });
+
+    test("Village layout contains well structure entry", () => {
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      const hasWell = layout.structures.some(s => s.type === 'Village Well');
+      if (!hasWell) throw new Error("Village layout is missing well structure");
+    });
+
+    test("Village layout contains at least 6 building structure entries", () => {
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      const buildings = layout.structures.filter(s => s.type !== 'Village Well');
+      if (buildings.length < 6) throw new Error(`Only ${buildings.length} buildings placed; expected at least 6`);
+    });
+
+    test("Village layout spawns at least 4 villagers with valid professions", () => {
+      const validProfessions = new Set(['farmer', 'blacksmith', 'librarian', 'cleric', 'unemployed']);
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      if (layout.villagers.length < 4) throw new Error(`Only ${layout.villagers.length} villagers; expected at least 4`);
+      for (const v of layout.villagers) {
+        if (!validProfessions.has(v.profession)) throw new Error(`Invalid profession: ${v.profession}`);
+        if (typeof v.x !== 'number' || typeof v.z !== 'number') throw new Error("Villager spawn missing x/z position");
+        if (typeof v.homeX !== 'number') throw new Error("Villager spawn missing homeX");
+        if (typeof v.workX !== 'number') throw new Error("Villager spawn missing workX");
+        if (typeof v.wellX !== 'number') throw new Error("Villager spawn missing wellX");
+      }
+    });
+
+    test("isVillageProtectedZone returns true inside village and false far away", () => {
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      const inside = villageGenerator.isVillageProtectedZone(layout.centerWx, layout.centerWz);
+      const outside = villageGenerator.isVillageProtectedZone(layout.centerWx + 200, layout.centerWz + 200);
+      if (!inside) throw new Error("isVillageProtectedZone returned false inside village zone");
+      if (outside) throw new Error("isVillageProtectedZone returned true 200 blocks away from village");
+    });
+
+    test("Village perimeter contains cobblestone wall blocks (ID 15)", () => {
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      let hasCobble = false;
+      for (const [, blockId] of layout.voxels) {
+        if (blockId === 15) { hasCobble = true; break; }
+      }
+      if (!hasCobble) throw new Error("Village layout missing cobblestone perimeter walls (ID 15)");
+    });
+
+    test("Village layout air corridors exist above pathways (no solid blocks at path-Y+1)", () => {
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      let checkedCount = 0;
+      for (const [k, blockId] of layout.voxels) {
+        if (blockId !== 27 || checkedCount >= 20) continue;
+        const parts = k.split(',');
+        const wx = parseInt(parts[0], 10), wy = parseInt(parts[1], 10), wz = parseInt(parts[2], 10);
+        const aboveKey = `${wx},${wy + 1},${wz}`;
+        const aboveBlock = layout.voxels.get(aboveKey);
+        if (aboveBlock !== undefined && aboveBlock !== 0) {
+          throw new Error(`Solid block ID ${aboveBlock} found 1 above gravel path at ${aboveKey}`);
+        }
+        checkedCount++;
+      }
+      if (checkedCount === 0) throw new Error("No gravel blocks found to validate air corridor");
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // TEST SUITE 64: VILLAGE HOUSE SCHEMATICS INTEGRITY
+    // ═══════════════════════════════════════════════════════════════════════
+    console.log("\n--- TEST SUITE 64: VILLAGE HOUSE SCHEMATICS INTEGRITY ---");
+
+    test("Small Oak Cottage schematic has name, blocks, and doorway gap", () => {
+      const s = villageHouses.getSmallOakCottageSchematic();
+      if (!s.name || !Array.isArray(s.blocks) || s.blocks.length === 0) throw new Error("Cottage schematic invalid");
+      const door0 = s.blocks.find(b => b.dx === 0 && b.dy === 0 && b.dz === 0 && b.id === 0);
+      if (!door0) throw new Error("Cottage missing door air block at (0,0,0)");
+      const door1 = s.blocks.find(b => b.dx === 0 && b.dy === 1 && b.dz === 0 && b.id === 0);
+      if (!door1) throw new Error("Cottage missing door air block at (0,1,0)");
+    });
+
+    test("Small Oak Cottage schematic has glass windows", () => {
+      const s = villageHouses.getSmallOakCottageSchematic();
+      const hasGlass = s.blocks.some(b => b.id === 9);
+      if (!hasGlass) throw new Error("Cottage has no glass windows (ID 9)");
+    });
+
+    test("Small Oak Cottage schematic has interior furniture (bed, chest, crafting, furnace)", () => {
+      const s = villageHouses.getSmallOakCottageSchematic();
+      if (!s.blocks.some(b => b.id === 57)) throw new Error("Cottage missing bed (ID 57)");
+      if (!s.blocks.some(b => b.id === 43)) throw new Error("Cottage missing chest (ID 43)");
+      if (!s.blocks.some(b => b.id === 41)) throw new Error("Cottage missing crafting table (ID 41)");
+      if (!s.blocks.some(b => b.id === 42)) throw new Error("Cottage missing furnace (ID 42)");
+    });
+
+    test("Small Oak Cottage schematic has porch step blocks (dz=-1)", () => {
+      const s = villageHouses.getSmallOakCottageSchematic();
+      const hasPorch = s.blocks.some(b => b.dz === -1 && b.dy === -1);
+      if (!hasPorch) throw new Error("Cottage missing porch steps (dz=-1, dy=-1)");
+    });
+
+    test("Blacksmith Workshop schematic has market pedestal (ID 95)", () => {
+      const s = villageHouses.getBlacksmithWorkshopSchematic();
+      if (!s.blocks.some(b => b.id === 95)) throw new Error("Blacksmith missing market pedestal (ID 95)");
+    });
+
+    test("Blacksmith Workshop schematic has anvil (ID 46), furnace (ID 42), and chest (ID 43)", () => {
+      const s = villageHouses.getBlacksmithWorkshopSchematic();
+      if (!s.blocks.some(b => b.id === 46)) throw new Error("Blacksmith missing anvil stand (ID 46)");
+      if (!s.blocks.some(b => b.id === 42)) throw new Error("Blacksmith missing furnace (ID 42)");
+      if (!s.blocks.some(b => b.id === 43)) throw new Error("Blacksmith missing loot chest (ID 43)");
+    });
+
+    test("Large Two-Story House has ladder (ID 45) to upper floor", () => {
+      const s = villageHouses.getLargeTwoStoryHouseSchematic();
+      if (!s.blocks.some(b => b.id === 45)) throw new Error("Two-Story House missing ladder (ID 45)");
+    });
+
+    test("Large Two-Story House has bookshelves on upper floor (ID 44)", () => {
+      const s = villageHouses.getLargeTwoStoryHouseSchematic();
+      const upperBookshelves = s.blocks.filter(b => b.id === 44 && b.dy >= 4);
+      if (upperBookshelves.length === 0) throw new Error("Two-Story House missing upper floor bookshelves (ID 44)");
+    });
+
+    test("Village Well schematic has water in centre (ID 8)", () => {
+      const s = villageHouses.getVillageWellSchematic();
+      if (!s.blocks.some(b => b.id === 8)) throw new Error("Village Well missing water block (ID 8)");
+    });
+
+    test("Cleric Shrine schematic has glowstone altar (ID 21)", () => {
+      const s = villageHouses.getClericShrineSchematic();
+      if (!s.blocks.some(b => b.id === 21)) throw new Error("Cleric Shrine missing glowstone (ID 21)");
+    });
+
+    test("Librarian House schematic has at least 4 bookshelf blocks (ID 44)", () => {
+      const s = villageHouses.getLibrarianHouseSchematic();
+      const bookshelfCount = s.blocks.filter(b => b.id === 44).length;
+      if (bookshelfCount < 4) throw new Error(`Librarian House has only ${bookshelfCount} bookshelves; expected >= 4`);
+    });
+
+    test("All house schematics have valid block field types", () => {
+      const schematics = [
+        villageHouses.getSmallOakCottageSchematic(),
+        villageHouses.getBlacksmithWorkshopSchematic(),
+        villageHouses.getLargeTwoStoryHouseSchematic(),
+        villageHouses.getVillageWellSchematic(),
+        villageHouses.getClericShrineSchematic(),
+        villageHouses.getLibrarianHouseSchematic(),
+      ];
+      for (const s of schematics) {
+        for (const b of s.blocks) {
+          if (typeof b.dx !== 'number' || typeof b.dy !== 'number' || typeof b.dz !== 'number') {
+            throw new Error(`${s.name}: block missing dx/dy/dz`);
+          }
+          if (typeof b.id !== 'number') throw new Error(`${s.name}: block at (${b.dx},${b.dy},${b.dz}) non-numeric id`);
+        }
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // TEST SUITE 65: VILLAGER MOB MESH & STATE INITIALIZATION
+    // ═══════════════════════════════════════════════════════════════════════
+    console.log("\n--- TEST SUITE 65: VILLAGER MOB MESH & STATE INITIALIZATION ---");
+
+    test("createVillagerMesh returns a THREE.Group for all professions", () => {
+      for (const p of ['farmer', 'blacksmith', 'librarian', 'cleric', 'unemployed']) {
+        const mesh = villagerMob.createVillagerMesh(p);
+        if (!mesh || !(mesh instanceof THREE.Group)) throw new Error(`createVillagerMesh('${p}') did not return THREE.Group`);
+      }
+    });
+
+    test("createVillagerMesh exposes head, arms, legs in userData", () => {
+      const mesh = villagerMob.createVillagerMesh('farmer');
+      if (!mesh.userData.head) throw new Error("Missing userData.head");
+      if (!mesh.userData.arms) throw new Error("Missing userData.arms");
+      if (!mesh.userData.legs) throw new Error("Missing userData.legs");
+    });
+
+    test("Farmer villager mesh has straw hat components on head", () => {
+      const mesh = villagerMob.createVillagerMesh('farmer');
+      const headMesh = mesh.userData.head;
+      if (!headMesh) throw new Error("No head mesh");
+      if (headMesh.children.filter(c => c.geometry).length < 2) throw new Error("Farmer hat should have >= 2 geometry children on head");
+    });
+
+    test("createVillagerState returns all required AI fields", () => {
+      const s = villagerMob.createVillagerState(10, 50, 10, 'farmer', 12, 50, 14, 10, 50, 18, 10, 50, 10);
+      if (s.type !== 'villager') throw new Error("type mismatch");
+      if (s.profession !== 'farmer') throw new Error("profession mismatch");
+      if (!s.pos || typeof s.pos.x !== 'number') throw new Error("missing pos Vector3");
+      if (!s.homePos) throw new Error("missing homePos");
+      if (!s.workplacePos) throw new Error("missing workplacePos");
+      if (!s.wellPos) throw new Error("missing wellPos");
+      if (typeof s.actionState !== 'string') throw new Error("missing actionState");
+      if (typeof s.stuckTimer !== 'number') throw new Error("missing stuckTimer");
+      if (typeof s.reputation !== 'number') throw new Error("missing reputation");
+      if (!Array.isArray(s.inventory)) throw new Error("missing inventory");
+    });
+
+    test("createVillagerState homePos and workplacePos reflect passed coordinates", () => {
+      const s = villagerMob.createVillagerState(0, 40, 0, 'librarian', 5, 40, 8, 10, 40, 12, 0, 40, 0);
+      if (s.homePos.x !== 5 || s.homePos.z !== 8) throw new Error("homePos mismatch");
+      if (s.workplacePos.x !== 10 || s.workplacePos.z !== 12) throw new Error("workplacePos mismatch");
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // TEST SUITE 66: VILLAGER SCHEDULE — CIRCADIAN STATE MACHINE
+    // ═══════════════════════════════════════════════════════════════════════
+    console.log("\n--- TEST SUITE 66: VILLAGER SCHEDULE — CIRCADIAN STATE MACHINE ---");
+
+    function makeMockVillager(profession = 'unemployed') {
+      return {
+        dead: false, type: 'villager', profession,
+        pos:          new THREE.Vector3(10, 40, 10),
+        vel:          new THREE.Vector3(0, 0, 0),
+        yaw: 0, hp: 20, maxHp: 20,
+        homePos:      new THREE.Vector3(10, 40, 10),
+        workplacePos: new THREE.Vector3(15, 40, 15),
+        wellPos:      new THREE.Vector3(10, 40, 10),
+        state: 'work', isSleeping: false,
+        panicTimer: 0, panicThreatPos: null,
+        actionState: 'idle', actionTimer: 0, actionTarget: null,
+        stuckTimer: 0, lastPos: new THREE.Vector3(10, 40, 10),
+        wanderTimer: 0, animPhase: 0,
+        inventory: [{ id: 135, count: 4 }],
+        reputation: 0, emoteTimer: 0, breadShareTimer: 20, _playerPos: null,
+      };
+    }
+
+    test("updateVillagerSchedule returns true (handled movement)", () => {
+      const mob = makeMockVillager();
+      const result = villagerSchedule.updateVillagerSchedule(mob, 0.016, 0.35);
+      if (result !== true) throw new Error(`Expected true, got ${result}`);
+    });
+
+    test("Schedule: state='sleep' during night (timeOfDay=0.85)", () => {
+      const mob = makeMockVillager();
+      villagerSchedule.updateVillagerSchedule(mob, 0.016, 0.85);
+      if (mob.state !== 'sleep') throw new Error(`Expected 'sleep', got '${mob.state}'`);
+    });
+
+    test("Schedule: state='gather' during evening well-gathering (timeOfDay=0.70)", () => {
+      const mob = makeMockVillager();
+      mob.pos.set(30, 40, 30);
+      villagerSchedule.updateVillagerSchedule(mob, 0.016, 0.70);
+      if (mob.state !== 'gather') throw new Error(`Expected 'gather', got '${mob.state}'`);
+    });
+
+    test("Schedule: state='work' during morning (timeOfDay=0.35)", () => {
+      const mob = makeMockVillager();
+      villagerSchedule.updateVillagerSchedule(mob, 0.016, 0.35);
+      if (mob.state !== 'work') throw new Error(`Expected 'work', got '${mob.state}'`);
+    });
+
+    test("Schedule: state='lunch' during midday (timeOfDay=0.50)", () => {
+      const mob = makeMockVillager();
+      villagerSchedule.updateVillagerSchedule(mob, 0.016, 0.50);
+      if (mob.state !== 'lunch') throw new Error(`Expected 'lunch', got '${mob.state}'`);
+    });
+
+    test("Panic timer overrides schedule and sets state='panic'", () => {
+      const mob = makeMockVillager();
+      mob.panicTimer = 5.0;
+      mob.panicThreatPos = new THREE.Vector3(12, 40, 12);
+      villagerSchedule.updateVillagerSchedule(mob, 0.016, 0.35);
+      if (mob.state !== 'panic') throw new Error(`Panic should override schedule; state='${mob.state}'`);
+    });
+
+    test("Villager velocity is zero when at home during sleep", () => {
+      const mob = makeMockVillager();
+      mob.pos.copy(mob.homePos);
+      villagerSchedule.updateVillagerSchedule(mob, 0.016, 0.85);
+      if (mob.vel.x !== 0 || mob.vel.z !== 0) throw new Error("Should be zero velocity at home at night");
+      if (!mob.isSleeping) throw new Error("isSleeping should be true at home during night");
+    });
+
+    test("Villager moves toward home when far during sleep phase", () => {
+      const mob = makeMockVillager();
+      mob.pos.set(50, 40, 50);
+      villagerSchedule.updateVillagerSchedule(mob, 0.016, 0.85);
+      const speed = Math.hypot(mob.vel.x, mob.vel.z);
+      if (speed < 0.1) throw new Error("Should be moving toward home at night");
+    });
+
+    test("HP regenerates during sleep", () => {
+      const mob = makeMockVillager();
+      mob.hp = 10;
+      mob.pos.copy(mob.homePos);
+      for (let i = 0; i < 300; i++) villagerSchedule.updateVillagerSchedule(mob, 0.016, 0.85);
+      if (mob.hp <= 10) throw new Error(`HP did not regen during sleep: hp=${mob.hp}`);
+      if (mob.hp > mob.maxHp) throw new Error(`HP exceeded maxHp: hp=${mob.hp}`);
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // TEST SUITE 67: FARMER AI — CROP DETECTION & WALKING TO CROPS
+    // ═══════════════════════════════════════════════════════════════════════
+    console.log("\n--- TEST SUITE 67: FARMER AI — CROP DETECTION & WALKING TO CROPS ---");
+
+    test("tickFarmerAI ignores non-farmer villagers", () => {
+      const mob = makeMockVillager('blacksmith');
+      mob.state = 'work'; mob.farmTimer = 10;
+      villagerFarming.tickFarmerAI(mob, 3.0);
+      if (mob.actionState !== 'idle') throw new Error("Non-farmer should not activate farming AI");
+    });
+
+    test("tickFarmerAI ignores farmer during sleep state", () => {
+      const mob = makeMockVillager('farmer');
+      mob.state = 'sleep'; mob.farmTimer = 10;
+      villagerFarming.tickFarmerAI(mob, 3.0);
+      if (mob.actionState !== 'idle') throw new Error("Farmer should not farm during sleep");
+    });
+
+    test("tickFarmerAI sets actionState=walk_to_crop when ripe wheat is nearby", () => {
+      world.setBlock(12, 40, 12, 92, false);
+      const mob = makeMockVillager('farmer');
+      mob.pos.set(10, 40, 10); mob.state = 'work'; mob.farmTimer = 10;
+      villagerFarming.tickFarmerAI(mob, 3.0);
+      if (mob.actionState !== 'walk_to_crop') throw new Error(`Expected 'walk_to_crop', got '${mob.actionState}'`);
+      if (!mob.actionTarget) throw new Error("actionTarget not set");
+      world.setBlock(12, 40, 12, 0, false);
+    });
+
+    test("tickFarmerAI harvests ripe wheat on arrival", () => {
+      world.setBlock(10, 40, 10, 92, false);
+      const mob = makeMockVillager('farmer');
+      mob.pos.set(10.5, 40, 10.5); mob.state = 'work';
+      mob.actionState = 'walk_to_crop';
+      mob.actionTarget = new THREE.Vector3(10.5, 40, 10.5);
+      villagerFarming.tickFarmerAI(mob, 0.016);
+      const newBlock = world.getBlock(10, 40, 10);
+      if (newBlock !== 90) throw new Error(`Expected seeded wheat (90) after harvest, got ${newBlock}`);
+      world.setBlock(10, 40, 10, 0, false);
+    });
+
+    test("tickFarmerAI adds wheat to inventory after harvest", () => {
+      world.setBlock(10, 41, 10, 92, false);
+      const mob = makeMockVillager('farmer');
+      mob.pos.set(10.5, 41, 10.5); mob.state = 'work';
+      mob.actionState = 'walk_to_crop';
+      mob.actionTarget = new THREE.Vector3(10.5, 41, 10.5);
+      const before = (mob.inventory.find(i => i.id === 136) || {}).count || 0;
+      villagerFarming.tickFarmerAI(mob, 0.016);
+      const after = (mob.inventory.find(i => i.id === 136) || {}).count || 0;
+      if (after <= before) throw new Error(`Wheat not added: before=${before}, after=${after}`);
+      world.setBlock(10, 41, 10, 0, false);
+    });
+
+    test("tickFarmerAI auto-crafts bread when farmer has 3+ wheat", () => {
+      const mob = makeMockVillager('farmer');
+      mob.state = 'work';
+      mob.inventory.push({ id: 136, count: 9 });
+      world.setBlock(10, 42, 10, 92, false);
+      mob.pos.set(10.5, 42, 10.5);
+      mob.actionState = 'walk_to_crop';
+      mob.actionTarget = new THREE.Vector3(10.5, 42, 10.5);
+      villagerFarming.tickFarmerAI(mob, 0.016);
+      const bread = mob.inventory.find(i => i.id === 135);
+      if (!bread || bread.count < 3) throw new Error(`Expected >= 3 bread, got ${bread ? bread.count : 0}`);
+      world.setBlock(10, 42, 10, 0, false);
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // TEST SUITE 68: VILLAGER PANIC & THREAT SYSTEM
+    // ═══════════════════════════════════════════════════════════════════════
+    console.log("\n--- TEST SUITE 68: VILLAGER PANIC & THREAT SYSTEM ---");
+
+    function makeMockHostile(x, y, z) {
+      return { type: 'zombie', dead: false, def: { hostile: true }, pos: new THREE.Vector3(x, y, z) };
+    }
+
+    test("tickVillagerPanic triggers panic when zombie is within 14 blocks", () => {
+      const mob = makeMockVillager(); mob.panicTimer = 0;
+      const zombie = makeMockHostile(mob.pos.x + 8, mob.pos.y, mob.pos.z);
+      villagerPanic.tickVillagerPanic(mob, 0.016, [mob, zombie]);
+      if (mob.panicTimer <= 0) throw new Error(`panicTimer not set: ${mob.panicTimer}`);
+    });
+
+    test("tickVillagerPanic does NOT panic when zombie is 25+ blocks away", () => {
+      const mob = makeMockVillager(); mob.panicTimer = 0;
+      const farZombie = makeMockHostile(mob.pos.x + 25, mob.pos.y, mob.pos.z);
+      villagerPanic.tickVillagerPanic(mob, 0.016, [mob, farZombie]);
+      if (mob.panicTimer > 0) throw new Error("Panic triggered by zombie 25 blocks away");
+    });
+
+    test("tickVillagerPanic propagates alarm to nearby villagers within 16 blocks", () => {
+      const mob1 = makeMockVillager(); mob1.pos.set(10, 40, 10);
+      const mob2 = makeMockVillager(); mob2.pos.set(20, 40, 10); mob2.panicTimer = 0;
+      const zombie = makeMockHostile(11, 40, 10);
+      villagerPanic.tickVillagerPanic(mob1, 0.016, [mob1, mob2, zombie]);
+      if (mob2.panicTimer <= 0) throw new Error("Alarm not propagated to nearby villager");
+    });
+
+    test("tickVillagerPanic does NOT propagate to villagers 40+ blocks away", () => {
+      const mob1 = makeMockVillager(); mob1.pos.set(10, 40, 10);
+      const mob2 = makeMockVillager(); mob2.pos.set(50, 40, 10); mob2.panicTimer = 0;
+      const zombie = makeMockHostile(11, 40, 10);
+      villagerPanic.tickVillagerPanic(mob1, 0.016, [mob1, mob2, zombie]);
+      if (mob2.panicTimer > 0) throw new Error("Alarm incorrectly propagated 40 blocks");
+    });
+
+    test("tickVillagerPanic ignores dead/missing-pos hostiles", () => {
+      const mob = makeMockVillager(); mob.panicTimer = 0;
+      const deadZ = { type: 'zombie', dead: true, def: { hostile: true }, pos: new THREE.Vector3(mob.pos.x + 2, mob.pos.y, mob.pos.z) };
+      villagerPanic.tickVillagerPanic(mob, 0.016, [mob, deadZ]);
+      if (mob.panicTimer > 0) throw new Error("Panic triggered by dead mob");
+    });
+
+    test("tickVillagerPanic clears panic when threat gone and timer expires", () => {
+      const mob = makeMockVillager();
+      mob.panicTimer = 0.01; mob.state = 'panic'; mob.panicThreatPos = new THREE.Vector3(30, 40, 30);
+      villagerPanic.tickVillagerPanic(mob, 0.016, [mob]);
+      if (mob.state === 'panic') throw new Error("Panic state should clear after timer expires with no threat");
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // TEST SUITE 69: TRADE CATALOGUE & GREEN COIN ECONOMY
+    // ═══════════════════════════════════════════════════════════════════════
+    console.log("\n--- TEST SUITE 69: TRADE CATALOGUE & GREEN COIN ECONOMY ---");
+
+    test("TRADE_CATALOGUE has at least 12 entries", () => {
+      if (villagerTradeCatalog.TRADE_CATALOGUE.length < 12) throw new Error(`Expected >= 12 trades, got ${villagerTradeCatalog.TRADE_CATALOGUE.length}`);
+    });
+
+    test("Every trade entry has required fields", () => {
+      for (const t of villagerTradeCatalog.TRADE_CATALOGUE) {
+        if (!t.tradeId) throw new Error("Trade missing tradeId");
+        if (!t.profession) throw new Error(`Trade ${t.tradeId} missing profession`);
+        if (!t.type) throw new Error(`Trade ${t.tradeId} missing type`);
+        if (typeof t.itemId !== 'number') throw new Error(`Trade ${t.tradeId} missing numeric itemId`);
+      }
+    });
+
+    test("getTradesByProfession returns only trades for that profession", () => {
+      const trades = villagerTradeCatalog.getTradesByProfession('farmer');
+      if (trades.length === 0) throw new Error("No farmer trades");
+      if (trades.some(t => t.profession !== 'farmer')) throw new Error("Non-farmer trade returned");
+    });
+
+    test("getTradeById returns correct trade by ID", () => {
+      const trade = villagerTradeCatalog.getTradeById('farm_bread_buy');
+      if (!trade || trade.tradeId !== 'farm_bread_buy') throw new Error("getTradeById returned wrong trade");
+    });
+
+    test("GREEN_COIN_ITEM_ID is a valid item in ITEMS registry", () => {
+      if (!config.ITEMS[villagerTradeCatalog.GREEN_COIN_ITEM_ID]) throw new Error("GREEN_COIN_ITEM_ID not in ITEMS registry");
+    });
+
+    test("buy_from_player trades have requiredQty and rewardCoins", () => {
+      for (const t of villagerTradeCatalog.TRADE_CATALOGUE) {
+        if (t.type === 'buy_from_player') {
+          if (typeof t.requiredQty !== 'number') throw new Error(`${t.tradeId} missing requiredQty`);
+          if (typeof t.rewardCoins !== 'number') throw new Error(`${t.tradeId} missing rewardCoins`);
+        }
+      }
+    });
+
+    test("sell_to_player trades have yieldCount and priceInCoins", () => {
+      for (const t of villagerTradeCatalog.TRADE_CATALOGUE) {
+        if (t.type === 'sell_to_player') {
+          if (typeof t.yieldCount !== 'number') throw new Error(`${t.tradeId} missing yieldCount`);
+          if (typeof t.priceInCoins !== 'number') throw new Error(`${t.tradeId} missing priceInCoins`);
+        }
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // TEST SUITE 70: VILLAGE INTEGRATION — CHUNK STAMPING & SPAWNING
+    // ═══════════════════════════════════════════════════════════════════════
+    console.log("\n--- TEST SUITE 70: VILLAGE INTEGRATION — CHUNK STAMPING & SPAWNING ---");
+
+    test("applyVillageToChunk stamps gravel into village center chunk", () => {
+      const vcx = 1, vcz = 0;
+      const ch = world.ensureChunk(vcx, vcz);
+      ch.generated = false;
+      world.generateChunk(ch);
+      let hasGravel = false;
+      for (let x = 0; x < 16 && !hasGravel; x++)
+        for (let z = 0; z < 16 && !hasGravel; z++)
+          for (let y = 1; y < 80; y++)
+            if (ch.get(x, y, z) === 27) { hasGravel = true; break; }
+      if (!hasGravel) throw new Error("No gravel stamped into village chunk after generateChunk");
+    });
+
+    test("isVillageProtectedZone covers village centre and nearby blocks", () => {
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      if (!villageGenerator.isVillageProtectedZone(layout.centerWx, layout.centerWz)) throw new Error("Village centre not protected");
+      if (!villageGenerator.isVillageProtectedZone(layout.centerWx + 10, layout.centerWz + 10)) throw new Error("10-block offset inside not protected");
+    });
+
+    test("Village voxels stay within world height bounds [0, HEIGHT-1]", () => {
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      for (const [k, blockId] of layout.voxels) {
+        if (blockId === 0) continue;
+        const wy = parseInt(k.split(',')[1], 10);
+        if (wy >= 80 || wy < 0) throw new Error(`Village voxel at Y=${wy} is out of bounds`);
+      }
+    });
+
+    test("All villager spawns have finite coordinates", () => {
+      const layout = villageGenerator.getVillageLayout(1, 0);
+      for (const v of layout.villagers) {
+        if (!isFinite(v.x) || !isFinite(v.y) || !isFinite(v.z)) throw new Error(`Non-finite spawn: (${v.x},${v.y},${v.z})`);
+      }
+    });
+
+    test("updateMobs handles 100 frames with villager without crash", () => {
+      const mob = mobs.spawnMob('villager', 20, 40, 20);
+      if (!mob) throw new Error("Failed to spawn villager");
+      mob.profession = 'farmer';
+      state.game.timeOfDay = 0.35;
+      for (let frame = 0; frame < 100; frame++) mobs.updateMobs(0.016);
+      if (!mob.pos || !isFinite(mob.pos.x)) throw new Error("Villager pos corrupted after 100 frames");
     });
 
   } catch (fatalErr) {

@@ -449,13 +449,13 @@ export function spawnMob(type, x, y, z, isBaby = false, parent = null){
   };
 
   if (type === 'villager') {
-    mob.profession = 'farmer';
-    mob.homePos = new THREE.Vector3(x, y, z);
-    mob.workplacePos = new THREE.Vector3(x + 4, y, z + 4);
-    mob.wellPos = new THREE.Vector3(x, y, z);
-    mob.inventory = [{ id: 135, count: 4 }];
-    mob.state = 'work';
-    mob.isSleeping = false;
+    // Merge createVillagerState fields into mob (comprehensive AI state)
+    const vState = createVillagerState(x, y, z, 'unemployed');
+    Object.assign(mob, vState);
+    mob.pos = new THREE.Vector3(x, y, z); // restore THREE.Vector3 (createVillagerState uses its own)
+    mob.vel = new THREE.Vector3(0, 0, 0);
+    // Register global game reference for bread-sharing
+    if (typeof window !== 'undefined') window.__game = game;
   }
 
   game.mobs.push(mob);
@@ -463,15 +463,25 @@ export function spawnMob(type, x, y, z, isBaby = false, parent = null){
 }
 
 if (typeof window !== 'undefined') {
-  window.__spawnVillageVillager = (profession, x, y, z) => {
+  /**
+   * Spawns a villager with full position anchors supplied by the village generator.
+   * Signature: (profession, x, y, z, homeX, homeY, homeZ, workX, workY, workZ, wellX, wellY, wellZ)
+   */
+  window.__spawnVillageVillager = (profession, x, y, z,
+                                    homeX, homeY, homeZ,
+                                    workX, workY, workZ,
+                                    wellX, wellY, wellZ) => {
     const mob = spawnMob('villager', x, y, z);
-    if (mob) {
-      mob.profession = profession || 'farmer';
-      mob.state = 'work';
-      mob.homePos = new THREE.Vector3(x, y, z);
-      mob.workplacePos = new THREE.Vector3(x + 4, y, z + 4);
-      mob.wellPos = new THREE.Vector3(x, y, z);
-    }
+    if (!mob) return;
+    mob.profession = profession || 'unemployed';
+    mob.state = 'work';
+    mob.isSleeping = false;
+    // Overwrite position anchors with village-generator-supplied values
+    if (homeX !== undefined) mob.homePos      = new THREE.Vector3(homeX, homeY, homeZ);
+    if (workX !== undefined) mob.workplacePos = new THREE.Vector3(workX, workY, workZ);
+    if (wellX !== undefined) mob.wellPos      = new THREE.Vector3(wellX, wellY, wellZ);
+    // Register game reference for bread-sharing bridge
+    if (typeof window !== 'undefined') window.__game = game;
   };
 }
 
@@ -555,9 +565,68 @@ export function updateMobs(dt){
 
     // ── Villager AI Module Ticking ──
     if (m.type === 'villager') {
-      updateVillagerSchedule(m, dt, game.timeOfDay);
-      tickFarmerAI(m, dt);
+      // Expose player position for look-at-player behaviour
+      m._playerPos = player.pos;
+      // Run schedule (returns true = handled movement; skip passive animal wander)
+      const scheduleHandled = updateVillagerSchedule(m, dt, game.timeOfDay);
+      if (m.profession === 'farmer') tickFarmerAI(m, dt);
       tickVillagerPanic(m, dt, game.mobs);
+      // Villagers skip all passive animal AI below
+      // We jump directly to physics (velocity is set by schedule)
+      if (scheduleHandled) {
+        // Apply gravity & movement — then continue to next mob
+        m.vel.y += GRAV * dt;
+        if (m.vel.y < -35) m.vel.y = -35;
+        // Float/swim in water
+        const inWaterV = getBlock(Math.floor(m.pos.x), Math.floor(m.pos.y), Math.floor(m.pos.z)) === 8;
+        if (inWaterV) m.vel.y = Math.max(m.vel.y, 2.5);
+        // Jump over 1-block obstacles
+        m.jumpCd = (m.jumpCd || 0) - dt;
+        if (m.onGround && m.jumpCd <= 0 && (m.vel.x !== 0 || m.vel.z !== 0)) {
+          const aheadX = m.pos.x + (-Math.sin(m.yaw)) * 0.4;
+          const aheadZ = m.pos.z + (-Math.cos(m.yaw)) * 0.4;
+          if (mobCollides(m, aheadX, m.pos.y, aheadZ)) {
+            m.vel.y = 7;
+            m.onGround = false;
+            m.jumpCd = 0.6;
+          }
+        }
+        mobMoveAxis(m, 'x', m.vel.x * dt);
+        mobMoveAxis(m, 'z', m.vel.z * dt);
+        mobMoveAxis(m, 'y', m.vel.y * dt);
+        if (m.mesh) {
+          m.mesh.position.copy(m.pos);
+          if (typeof m.yaw === 'number' && !isNaN(m.yaw)) {
+            let diff = m.yaw - m.mesh.rotation.y;
+            diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+            m.mesh.rotation.y += diff * Math.min(1.0, dt * 10.0);
+          }
+          // Head look-at animation
+          const ud = m.mesh.userData || {};
+          if (ud.head && m._playerPos) {
+            const lookDx = m._playerPos.x - m.pos.x;
+            const lookDz = m._playerPos.z - m.pos.z;
+            const horizDist = Math.hypot(lookDx, lookDz);
+            if (horizDist < 3.5) {
+              // Villager notices player — look at them
+              const targetYaw = Math.atan2(-lookDx, -lookDz);
+              let relYaw = targetYaw - m.mesh.rotation.y;
+              relYaw = Math.atan2(Math.sin(relYaw), Math.cos(relYaw));
+              const clampedYaw = Math.max(-0.8, Math.min(0.8, relYaw));
+              ud.head.rotation.y += (clampedYaw - ud.head.rotation.y) * Math.min(1.0, dt * 6.0);
+            } else {
+              ud.head.rotation.y += (0 - ud.head.rotation.y) * Math.min(1.0, dt * 4.0);
+            }
+          }
+          // Leg bob while moving
+          const isMoving = (Math.abs(m.vel.x) > 0.05 || Math.abs(m.vel.z) > 0.05);
+          if (isMoving) {
+            m.animPhase = (m.animPhase || 0) + dt * m.def.speed * 3.5;
+            m.mesh.position.y += Math.sin(m.animPhase * 2) * 0.025;
+          }
+        }
+        continue; // skip rest of hostile/passive AI loop for this frame
+      }
     }
     
     if (m.attackCd > 0) m.attackCd -= dt;
