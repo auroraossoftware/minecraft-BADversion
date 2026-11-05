@@ -3,12 +3,12 @@ import * as THREE from 'three';
 // ---- Firebase Config ----
 // To connect to your Firebase project, replace the placeholder below with your web app's config object from the Firebase Console.
 export const firebaseConfig = {
-  apiKey: "AIzaSyAHx3wJ5UtJEnG1ologtiSlIJ8wVq7fIXQ",
-  authDomain: "minecraft-duplicate.firebaseapp.com",
-  projectId: "minecraft-duplicate",
-  storageBucket: "minecraft-duplicate.firebasestorage.app",
-  messagingSenderId: "547851689112",
-  appId: "1:547851689112:web:6f69290aea8cf13ccf44ed"
+  apiKey: "AIzaSyCRhqPq0CFE-dGDZayKpnqWgvFABC4fXX0",
+  authDomain: "minecraftbadtogood.firebaseapp.com",
+  projectId: "minecraftbadtogood",
+  storageBucket: "minecraftbadtogood.firebasestorage.app",
+  messagingSenderId: "71195048405",
+  appId: "1:71195048405:web:b84e75371bc1b06e69655c"
 };
 
 // Check if firebase is loaded and configured
