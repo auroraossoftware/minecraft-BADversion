@@ -181,22 +181,31 @@ export default function LobbyCard({ userEmail, userRole, currentUser, syncStatus
   const mm = Math.floor((rawTime % 1) * 60).toString().padStart(2, '0');
 
   return (
-    <div className="card" id="lobbyCard" style={{ maxWidth: '640px', width: '92vw', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', overflow: 'hidden', padding: '20px 24px' }}>
-      <h1 style={{ flexShrink: 0 }}>VOXEL ECOSYSTEM</h1>
-      <div className="tag" style={{ flexShrink: 0 }}>A MULTIPLAYER VOXEL WORLD</div>
+    <div className="card" id="lobbyCard" style={{ maxWidth: '660px', width: '94vw', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', overflow: 'hidden', padding: '16px 20px' }}>
+      <div className="retro-win-titlebar">
+        <span>📁 C:\PROGRAM FILES\VOXEL_2004\LOBBY_CONTROLS.EXE [UNREGISTERED TRIAL]</span>
+        <div className="retro-win-controls">
+          <button className="retro-win-btn">_</button>
+          <button className="retro-win-btn">□</button>
+          <button className="retro-win-btn" onClick={() => alert("Cannot exit. You are already in Gary's basement.")}>X</button>
+        </div>
+      </div>
+
+      <h1 style={{ flexShrink: 0 }}>VOXEL 2004</h1>
+      <div className="tag" style={{ flexShrink: 0 }}>~*~ 3D CYBERNETIC VOXEL REALM CODED BY GARY (AGE 55) AT 3:42 AM ~*~</div>
 
       {/* Navigation */}
       <div className="dashboard-tabs" style={{ flexShrink: 0, flexWrap: 'wrap' }}>
-        <button id="tabPlayBtn" className={`dash-tab ${activeTab === 'play' ? 'active' : ''}`} onClick={() => setActiveTab('play')}>🎮 Play Mode</button>
-        <button className="dash-tab" style={{ background: notificationsCount > 0 ? 'rgba(214,178,120,0.35)' : 'rgba(214,178,120,0.15)', border: '1px solid var(--gold)', color: 'var(--gold-bright)' }} onClick={onOpenNotifications}>🔔 Notifications ({notificationsCount})</button>
-        <button className="dash-tab" style={{ background: 'rgba(214,178,120,0.2)', border: '1px solid var(--gold)', color: 'var(--gold-bright)' }} onClick={onOpenDailyRewards}>🎁 Daily Gift</button>
-        <button className="dash-tab" onClick={onOpenDirectory}>🔍 Directory</button>
-        <button id="tabChatBtn" className={`dash-tab ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>💬 Chat Hub</button>
-        <button id="tabReviewBtn" className={`dash-tab ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>⭐ Reviews</button>
-        <button id="tabStatsBtn" className={`dash-tab ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>📊 My Stats</button>
-        <button id="tabLeaderboardBtn" className={`dash-tab ${activeTab === 'leaderboard' ? 'active' : ''}`} onClick={() => setActiveTab('leaderboard')}>🥇 Leaderboard</button>
-        <button id="tabAchievementsBtn" className={`dash-tab ${activeTab === 'achievements' ? 'active' : ''}`} onClick={() => setActiveTab('achievements')}>🏆 Badges</button>
-        <button id="tabAvatarBtn" className={`dash-tab ${activeTab === 'avatar' ? 'active' : ''}`} onClick={() => setActiveTab('avatar')}>👕 Avatar</button>
+        <button id="tabPlayBtn" className={`dash-tab ${activeTab === 'play' ? 'active' : ''}`} onClick={() => setActiveTab('play')}>🎮 1. PLAY VOXEL</button>
+        <button className="dash-tab" style={{ background: notificationsCount > 0 ? '#ffff99' : '#dfdfdf', color: '#000080' }} onClick={onOpenNotifications}>🔔 2. BEEPERS ({notificationsCount})</button>
+        <button className="dash-tab" style={{ background: '#ffffcc', color: '#ff0000' }} onClick={onOpenDailyRewards}>🎁 3. FREE LOTTO</button>
+        <button className="dash-tab" onClick={onOpenDirectory}>🔍 4. WHO'S ONLINE</button>
+        <button id="tabChatBtn" className={`dash-tab ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>💬 5. AIM CHAT</button>
+        <button id="tabReviewBtn" className={`dash-tab ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>⭐ 6. GUESTBOOK</button>
+        <button id="tabStatsBtn" className={`dash-tab ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>📊 7. HIGH SCORES</button>
+        <button id="tabLeaderboardBtn" className={`dash-tab ${activeTab === 'leaderboard' ? 'active' : ''}`} onClick={() => setActiveTab('leaderboard')}>🥇 8. TOP 10 PLAYERS</button>
+        <button id="tabAchievementsBtn" className={`dash-tab ${activeTab === 'achievements' ? 'active' : ''}`} onClick={() => setActiveTab('achievements')}>🏆 9. BLUE RIBBONS</button>
+        <button id="tabAvatarBtn" className={`dash-tab ${activeTab === 'avatar' ? 'active' : ''}`} onClick={() => setActiveTab('avatar')}>👕 10. DRESS UP STEVE</button>
       </div>
 
       {/* Tabs panels */}
@@ -341,19 +350,30 @@ export default function LobbyCard({ userEmail, userRole, currentUser, syncStatus
             </div>
           )}
 
-          <div className="keys" style={{ margin: '0 0 20px 0' }}>
-            <div><kbd>W A S D</kbd> move &nbsp; <kbd>Space</kbd> jump &nbsp; <kbd>Shift</kbd> sprint</div>
-            <div><kbd>Mouse</kbd> look &nbsp; <kbd>Left</kbd> mine &nbsp; <kbd>Right</kbd> place</div>
-            <div><kbd>1–8</kbd> select &nbsp; <kbd>E</kbd> inventory &nbsp; <kbd>Q</kbd> eat &nbsp; <kbd>F</kbd> fly &nbsp; <kbd>F5</kbd> camera &nbsp; <kbd>Esc</kbd> pause</div>
+          <div className="keys" style={{ margin: '0 0 14px 0' }}>
+            <div><kbd>W A S D</kbd> walk around &nbsp; <kbd>Space</kbd> jump &nbsp; <kbd>Shift</kbd> fast jog</div>
+            <div><kbd>Mouse</kbd> look &nbsp; <kbd>Left Click</kbd> smash &nbsp; <kbd>Right Click</kbd> build</div>
+            <div><kbd>1–8</kbd> belt items &nbsp; <kbd>E</kbd> backpack &nbsp; <kbd>Q</kbd> eat snack &nbsp; <kbd>Esc</kbd> hide from wife</div>
           </div>
 
           <button id="playBtn" onClick={handleEnterWorld}>
-            ENTER {worldMode === 'singleplayer' ? 'PRIVATE WORLD' : worldMode === 'public' ? 'GLOBAL NEXUS' : 'TEAM ROOM'}
+            👉👉 ENTER {worldMode === 'singleplayer' ? 'GARY\'S BASEMENT (SOLO)' : worldMode === 'public' ? 'THE PUBLIC CYBER-MATRIX' : 'PRIVATE CLUBHOUSE'} (CLICK HARD) 👈👈
           </button>
           
           <div className="secondary-actions">
-            <button className="minor-btn" onClick={handleTeleportSurface}>↑ Teleport to surface</button>
-            <button className="minor-btn danger" onClick={() => setResetStep(0)}>Reset world</button>
+            <button className="minor-btn" onClick={handleTeleportSurface}>↑ Beam Me Up To Surface</button>
+            <button className="minor-btn danger" onClick={() => setResetStep(0)}>⚠️ Format World Drive</button>
+          </div>
+
+          <div style={{ fontSize: '10px', color: '#000080', marginTop: '12px', fontWeight: 'bold' }}>
+            📌 Uncle Gary: Please do not spill grape soda on the computer tower. Best viewed in 800x600 resolution.
+          </div>
+
+          <div className="retro-badge-row">
+            <div className="retro-badge">🌐 NETSCAPE 4.0</div>
+            <div className="retro-badge">💾 SOUND BLASTER 16</div>
+            <div className="retro-badge">☕ JAVA READY</div>
+            <div className="hit-counter">VISITORS: 00042069</div>
           </div>
         </div>
       )}

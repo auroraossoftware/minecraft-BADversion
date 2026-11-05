@@ -279,17 +279,25 @@ export default function OnboardingAgentModal({ onComplete }) {
   return (
     <div id="onboardingAgentModal" className="modal-onboarding-overlay">
       <div className="onboarding-card">
+        {/* Retro Window Titlebar */}
+        <div className="retro-win-titlebar" style={{ margin: 0, padding: '3px 8px' }}>
+          <span>📖 C:\SETUP\INSTALLSHIELD_WIZARD_VOXEL_2004.EXE</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={() => alert("Gary insists that you finish reading his manual.")}>X</button>
+          </div>
+        </div>
+
         {/* Header Bar */}
         <div className="onboarding-header">
           <div className="agent-avatar-badge">
             <span className="avatar-icon">{stepData.icon}</span>
             <div className="agent-title-meta">
-              <span className="agent-label">VOXEL GUIDE ASSISTANT</span>
-              <span className="step-tag">{stepData.badge} • STEP {stepData.step} OF {ONBOARDING_STEPS.length}</span>
+              <span className="agent-label">UNCLE GARY'S INSTALL SHIELD WIZARD</span>
+              <span className="step-tag">{stepData.badge} • PAGE {stepData.step} OF {ONBOARDING_STEPS.length}</span>
             </div>
           </div>
           <div className="no-skip-pill">
-            <span>🔒 UNSKIPPABLE WALKTHROUGH</span>
+            <span>🔒 MANDATORY TUTORIAL (READ CAREFULLY)</span>
           </div>
         </div>
 

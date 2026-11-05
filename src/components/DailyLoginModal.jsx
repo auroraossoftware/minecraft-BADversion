@@ -68,31 +68,27 @@ export default function DailyLoginModal({ currentUser, onClose }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
     }}>
       <div style={{
-        background: 'linear-gradient(135deg, rgba(26,20,15,0.98), rgba(12,10,8,0.99))',
-        border: '2px solid var(--gold)', borderRadius: '16px',
-        width: '680px', maxWidth: '95vw', padding: '24px',
-        boxShadow: '0 12px 40px rgba(214,178,120,0.25)', color: '#fff', textAlign: 'center',
+        background: '#c0c0c0',
+        borderTop: '4px solid #ffffff', borderLeft: '4px solid #ffffff',
+        borderRight: '4px solid #000000', borderBottom: '4px solid #000000',
+        borderRadius: '0px',
+        width: '680px', maxWidth: '95vw', padding: '16px 20px',
+        boxShadow: '8px 8px 0px #000000', color: '#000000', textAlign: 'center',
         position: 'relative'
       }}>
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: '16px', right: '16px',
-            background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
-            fontSize: '18px', width: '32px', height: '32px', borderRadius: '50%',
-            cursor: 'pointer'
-          }}
-        >
-          ✕
-        </button>
+        <div className="retro-win-titlebar" style={{ margin: '0 0 10px 0' }}>
+          <span>🎰 C:\CASINO\LUCKY_777_SCRATCHOFF_SWEEPSTAKES.EXE</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={onClose}>X</button>
+          </div>
+        </div>
 
-        <div style={{ fontSize: '28px', marginBottom: '4px' }}>🎁</div>
-        <h2 style={{ color: 'var(--gold-bright)', margin: 0, fontSize: '22px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          7-Day Daily Login Streaks
+        <div style={{ fontSize: '28px', marginBottom: '2px' }}>🎰 🎁 🎰</div>
+        <h2 style={{ color: '#ff0000', margin: 0, fontSize: '20px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>
+          UNCLE GARY'S 7-DAY LUCKY SCRATCH-OFF LOTTERY
         </h2>
-        <p style={{ color: '#bbb', fontSize: '12px', margin: '6px 0 20px 0' }}>
-          Log in every 24 hours to claim tools, diamonds, cosmetics, and rewards!
+        <p style={{ color: '#000080', fontSize: '12px', margin: '4px 0 16px 0', fontWeight: 'bold' }}>
+          SCRATCH EVERY 24 HOURS TO WIN LUXURY TOOLS AND COLD HARD CYBER-REWARDS!
         </p>
 
         {/* 7-Day Grid */}

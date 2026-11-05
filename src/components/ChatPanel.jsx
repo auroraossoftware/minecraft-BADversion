@@ -162,26 +162,36 @@ export default function ChatPanel({ currentUser, isSidePanel = false, onClose, i
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', height: '100%', width: '100%',
-      background: isSidePanel ? 'rgba(14, 11, 8, 0.96)' : 'rgba(20, 16, 12, 0.98)',
-      border: isSidePanel ? '2px solid var(--gold)' : '1px solid var(--slot-line)',
-      borderRadius: isSidePanel ? '12px' : '8px',
-      boxShadow: '0 12px 40px rgba(0,0,0,0.85)',
-      color: '#f0e6d2', overflow: 'hidden', boxSizing: 'border-box'
+      background: '#c0c0c0',
+      borderTop: '3px solid #ffffff', borderLeft: '3px solid #ffffff',
+      borderRight: '3px solid #000000', borderBottom: '3px solid #000000',
+      boxShadow: '6px 6px 0px #000000',
+      color: '#000080', overflow: 'hidden', boxSizing: 'border-box'
     }}>
+      {/* ── RETRO WINDOW TITLEBAR ── */}
+      <div className="retro-win-titlebar" style={{ margin: 0, padding: '3px 8px' }}>
+        <span>💛 AOL INSTANT MESSENGER (AIM) v4.8 — DIRECT MESSAGE</span>
+        <div className="retro-win-controls">
+          {isSidePanel && onClose && (
+            <button className="retro-win-btn" onClick={onClose}>X</button>
+          )}
+        </div>
+      </div>
+
       {/* ── HEADER BAR ── */}
       <div style={{
-        padding: '10px 14px', background: 'rgba(30, 22, 14, 0.95)',
-        borderBottom: '1px solid var(--slot-line)', display: 'flex',
+        padding: '6px 10px', background: '#dfdfdf',
+        borderBottom: '2px solid #808080', display: 'flex',
         justify: 'space-between', alignItems: 'center', flexShrink: 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '16px' }}>💬</span>
           <div>
-            <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--gold-bright)' }}>
-              {isSidePanel ? 'IN-GAME CHAT' : 'COMMUNITY CHAT HUB'}
+            <div style={{ fontSize: '11px', fontWeight: 900, color: '#000080' }}>
+              {isSidePanel ? 'AIM INSTANT MESSAGE' : 'AIM CHAT ROOM'}
             </div>
-            <div style={{ fontSize: '9px', color: '#a09075' }}>
-              {activeChat ? `With: ${recipientEmail}` : 'Select or start a conversation'}
+            <div style={{ fontSize: '10px', color: '#555555', fontWeight: 'bold' }}>
+              {activeChat ? `Chatting with: ${recipientEmail}` : 'Select a Buddy from list'}
             </div>
           </div>
         </div>
@@ -190,20 +200,13 @@ export default function ChatPanel({ currentUser, isSidePanel = false, onClose, i
           <button
             onClick={() => setShowNewChatModal(true)}
             style={{
-              background: 'rgba(214,178,120,0.2)', border: '1px solid var(--gold)', color: 'var(--gold-bright)',
-              padding: '4px 10px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer'
+              background: '#c0c0c0', borderTop: '2px solid #fff', borderLeft: '2px solid #fff',
+              borderRight: '2px solid #000', borderBottom: '2px solid #000', color: '#000080',
+              padding: '2px 8px', fontSize: '10px', fontWeight: 900, cursor: 'pointer'
             }}
           >
-            + New Chat
+            + New IM
           </button>
-          {isSidePanel && onClose && (
-            <button
-              onClick={onClose}
-              style={{ background: 'transparent', border: 'none', color: '#aaa', fontSize: '16px', cursor: 'pointer', padding: '2px 6px' }}
-            >
-              ✕
-            </button>
-          )}
         </div>
       </div>
 

@@ -113,19 +113,26 @@ export default function FurnaceScreen({ activeFurnaceCoords, onClose, scheduleSa
   return (
     <div id="furnaceScreen" className="modal-furnace" style={{ display: 'flex' }}>
       <div className="furnace-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h2>Furnace Smelting</h2>
-          <button className="furnace-close" onClick={onClose}>Close [X]</button>
+        <div className="retro-win-titlebar" style={{ margin: '0 0 10px 0' }}>
+          <span>🔥 C:\APPLIANCES\MICROWAVE_ORE_TOASTER_2004.EXE</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={onClose}>X</button>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h2 style={{ fontSize: '15px', color: '#ff0000', fontWeight: 900 }}>🔥 GARY'S KITCHEN OVEN &amp; SMELTING TOASTER</h2>
+          <button className="furnace-close" onClick={onClose}>Close Window [X]</button>
         </div>
 
         <div className="furnace-layout">
           {/* Inventory Selection */}
           <div className="furnace-col">
-            <h3 style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', marginBottom: '8px' }}>Select Ores / Fuels to Load</h3>
+            <h3 style={{ fontSize: '11px', color: '#000080', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 900 }}>🥖 Ingredients to Cook (Click / Shift+Click)</h3>
             <div className="chest-grid">
               {ids.length === 0 ? (
-                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', gridColumn: 'span 4', textAlign: 'center', padding: '20px' }}>
-                  No items to load
+                <div style={{ color: '#888', fontSize: '11px', gridColumn: 'span 4', textAlign: 'center', padding: '20px', fontWeight: 'bold' }}>
+                  No food or rocks to cook
                 </div>
               ) : (
                 ids.map(id => (

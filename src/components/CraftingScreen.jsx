@@ -394,12 +394,15 @@ export default function CraftingScreen({ onClose }) {
     <>
       {/* ── Main Panel ── */}
       <div style={{
-        width: 'min(740px, 96vw)',
+        width: 'min(760px, 96vw)',
         maxHeight: '90vh',
-        background: 'rgba(20,15,10,0.97)',
-        border: '1px solid rgba(214,178,120,0.35)',
-        borderRadius: 10,
-        boxShadow: '0 20px 80px rgba(0,0,0,0.8)',
+        background: '#c0c0c0',
+        borderTop: '4px solid #ffffff',
+        borderLeft: '4px solid #ffffff',
+        borderRight: '4px solid #000000',
+        borderBottom: '4px solid #000000',
+        borderRadius: 0,
+        boxShadow: '8px 8px 0px #000000',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -407,30 +410,39 @@ export default function CraftingScreen({ onClose }) {
       }}>
 
         {/* ── Header ── */}
+        <div className="retro-win-titlebar" style={{ margin: 0, padding: '4px 8px' }}>
+          <span>📖 C:\WINDOWS\HELP\GARY_CRAFTING_HANDBOOK_2004.CHM</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={handleClose}>X</button>
+          </div>
+        </div>
+
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '14px 22px',
-          borderBottom: '1px solid rgba(214,178,120,0.2)',
-          background: 'rgba(0,0,0,0.3)',
+          padding: '8px 14px',
+          borderBottom: '2px solid #808080',
+          background: '#dfdfdf',
         }}>
-          <span style={{ color: '#f2d9a0', fontWeight: 700, fontSize: 14, letterSpacing: 2 }}>
-            🔨 INVENTORY &amp; CRAFTING
+          <span style={{ color: '#000080', fontWeight: 900, fontSize: 13, letterSpacing: 1 }}>
+            🔨 GARY'S 3x3 CARPENTRY &amp; BLUEPRINT BENCH
           </span>
           {held && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#f2d9a0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#000080', fontWeight: 'bold' }}>
               <Swatch3D id={held.id} />
               Holding: <strong>{thingName(held.id)} ×{held.count}</strong>
               <button onClick={handleReturnHeld} style={{
-                fontFamily: 'inherit', fontSize: 10, color: '#d6b278',
-                background: 'rgba(40,32,22,0.9)', border: '1px solid rgba(214,178,120,0.25)',
-                borderRadius: 4, padding: '3px 8px', cursor: 'pointer',
-              }}>↩ Return to Inventory</button>
+                fontFamily: 'inherit', fontSize: 10, color: '#000080',
+                background: '#c0c0c0', borderTop: '2px solid #fff', borderLeft: '2px solid #fff',
+                borderRight: '2px solid #000', borderBottom: '2px solid #000',
+                padding: '2px 6px', cursor: 'pointer', fontWeight: 900,
+              }}>↩ Back to Bag</button>
             </div>
           )}
           <button onClick={handleClose} style={{
-            fontFamily: 'inherit', fontSize: 11, color: '#d6b278',
-            background: 'rgba(40,32,22,0.9)', border: '1px solid rgba(214,178,120,0.25)',
-            borderRadius: 4, padding: '6px 14px', cursor: 'pointer', letterSpacing: 1,
+            fontFamily: 'inherit', fontSize: 11, color: '#000000',
+            background: '#c0c0c0', borderTop: '2px solid #fff', borderLeft: '2px solid #fff',
+            borderRight: '2px solid #000', borderBottom: '2px solid #000',
+            padding: '3px 10px', cursor: 'pointer', fontWeight: 900,
           }}>✕ Close</button>
         </div>
 

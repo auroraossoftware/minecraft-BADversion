@@ -312,32 +312,40 @@ export default function WayfinderModal({ currentUser, onClose }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
     }}>
       <div style={{
-        background: 'rgba(20,15,10,0.98)', border: '2px solid var(--gold)', borderRadius: 12,
-        width: '100%', maxWidth: 640, maxHeight: '88vh',
+        background: '#c0c0c0', borderTop: '4px solid #ffffff', borderLeft: '4px solid #ffffff',
+        borderRight: '4px solid #000000', borderBottom: '4px solid #000000', borderRadius: 0,
+        width: '100%', maxWidth: 660, maxHeight: '88vh',
         display: 'flex', flexDirection: 'column',
-        boxShadow: '0 20px 70px rgba(0,0,0,0.9)', overflow: 'hidden', color: '#f0e6d2',
+        boxShadow: '8px 8px 0px #000000', overflow: 'hidden', color: '#000080',
       }}>
+        {/* Retro Titlebar */}
+        <div className="retro-win-titlebar" style={{ margin: 0, padding: '3px 8px' }}>
+          <span>🛰️ C:\GARMIN_GPS\VOXEL_WAYFINDER_MAPS_2004.EXE</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={onClose}>X</button>
+          </div>
+        </div>
 
         {/* ── Header ── */}
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(214,178,120,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div style={{ padding: '8px 14px', borderBottom: '2px solid #808080', background: '#dfdfdf', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 17, color: 'var(--gold-bright)', fontWeight: 'bold', letterSpacing: 1 }}>
-              🧭 {showRoutePicker ? `Route Options — ${pendingLabel}` : 'WHERE DO YOU WANNA GO?'}
+            <h2 style={{ margin: 0, fontSize: 15, color: '#ff0000', fontWeight: 900, letterSpacing: 1 }}>
+              🧭 {showRoutePicker ? `Route Options — ${pendingLabel}` : 'GARMIN 3D GPS: WHERE DO YOU WANNA GO?'}
             </h2>
-            <div style={{ fontSize: 9, color: '#9a8a76', marginTop: 2 }}>
+            <div style={{ fontSize: 10, color: '#000080', marginTop: 2, fontWeight: 'bold' }}>
               {showRoutePicker
-                ? 'Press [1] [2] [3] or click a route to activate it'
-                : 'Smart 3D Voxel Pathfinder • 2-block clearance • Edge case detection'}
+                ? 'Press [1] [2] [3] or click a route to activate satellite GPS'
+                : '3D Voxel Satellite Navigation • Maps Copyright 2004 Garmin / Gary'}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {showRoutePicker && (
               <button onClick={() => { setPendingRoutes(null); setCalculating(false); }}
-                style={{ background: 'rgba(214,178,120,0.15)', border: '1px solid var(--gold)', color: 'var(--gold-bright)', padding: '5px 12px', borderRadius: 4, fontSize: 10, cursor: 'pointer' }}>
+                style={{ background: '#c0c0c0', borderTop: '2px solid #fff', borderLeft: '2px solid #fff', borderRight: '2px solid #000', borderBottom: '2px solid #000', color: '#000080', padding: '4px 10px', fontSize: 10, cursor: 'pointer', fontWeight: 900 }}>
                 ← Back
               </button>
             )}
-            <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#aaa', fontSize: 20, cursor: 'pointer' }}>✕</button>
+            <button onClick={onClose} style={{ background: '#c0c0c0', borderTop: '2px solid #fff', borderLeft: '2px solid #fff', borderRight: '2px solid #000', borderBottom: '2px solid #000', color: '#000', fontSize: 11, fontWeight: 900, cursor: 'pointer', padding: '2px 8px' }}>✕ Close</button>
           </div>
         </div>
 

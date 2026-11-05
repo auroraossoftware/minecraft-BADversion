@@ -128,25 +128,34 @@ export default function PlayerDirectoryModal({ currentUser, onClose, onOpenChatW
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.85)',
-      backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+      position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,60,0.85)',
+      backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
     }}>
       <div style={{
-        background: 'rgba(20,16,12,0.98)', border: '2px solid var(--gold)', borderRadius: '12px',
-        width: '100%', maxWidth: '640px', maxHeight: '88vh', display: 'flex', flexDirection: 'column',
-        boxShadow: '0 15px 50px rgba(0,0,0,0.9)', overflow: 'hidden', color: '#f0e6d2'
+        background: '#c0c0c0', borderTop: '4px solid #ffffff', borderLeft: '4px solid #ffffff',
+        borderRight: '4px solid #000000', borderBottom: '4px solid #000000', borderRadius: 0,
+        width: '100%', maxWidth: '660px', maxHeight: '88vh', display: 'flex', flexDirection: 'column',
+        boxShadow: '8px 8px 0px #000000', overflow: 'hidden', color: '#000080'
       }}>
+        {/* Retro Titlebar */}
+        <div className="retro-win-titlebar" style={{ margin: 0, padding: '3px 8px' }}>
+          <span>👥 C:\ADDRESS_BOOK\WHITE_PAGES_DIRECTORY_2004.EXE</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={onClose}>X</button>
+          </div>
+        </div>
+
         {/* Header */}
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--slot-line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div style={{ padding: '10px 14px', borderBottom: '2px solid #808080', background: '#dfdfdf', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '16px', color: 'var(--gold-bright)', fontWeight: 'bold' }}>
-              👥 SOCIAL NETWORK & PLAYER DIRECTORY
+            <h2 style={{ margin: 0, fontSize: '15px', color: '#000080', fontWeight: 900 }}>
+              👥 WHITE PAGES &amp; BUDDY DIRECTORY 2004
             </h2>
-            <div style={{ fontSize: '10px', color: '#9a8a76', marginTop: '2px' }}>
-              Search accounts, manage friends list, and send room invitations
+            <div style={{ fontSize: '10px', color: '#555555', marginTop: '2px', fontWeight: 'bold' }}>
+              Search for neighbors, add to Buddy List, send telegram invites
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#aaa', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ background: '#c0c0c0', borderTop: '2px solid #fff', borderLeft: '2px solid #fff', borderRight: '2px solid #000', borderBottom: '2px solid #000', color: '#000', fontSize: '11px', fontWeight: 900, cursor: 'pointer', padding: '2px 8px' }}>✕ Close</button>
         </div>
 
         {/* My Profile Bio Bar */}

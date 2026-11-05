@@ -66,35 +66,46 @@ export default function ErrorConsoleModal({ onClose }) {
         width: '100%',
         maxWidth: '850px',
         maxHeight: '88vh',
-        background: '#100d0a',
-        border: '1px solid rgba(242, 217, 160, 0.3)',
-        borderRadius: '12px',
+        background: '#c0c0c0',
+        borderTop: '4px solid #ffffff',
+        borderLeft: '4px solid #ffffff',
+        borderRight: '4px solid #000000',
+        borderBottom: '4px solid #000000',
+        borderRadius: '0px',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 8px 36px rgba(0,0,0,0.8)',
+        boxShadow: '8px 8px 0px #000000',
         overflow: 'hidden',
-        color: '#f0e6cc',
+        color: '#000080',
         fontFamily: 'monospace',
       }}>
+        {/* Retro Titlebar */}
+        <div className="retro-win-titlebar" style={{ margin: 0, padding: '4px 8px' }}>
+          <span>🚨 C:\WINDOWS\SYSTEM32\DR_WATSON_DIAGNOSTICS_2004.EXE</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={onClose}>X</button>
+          </div>
+        </div>
+
         {/* Header */}
         <div style={{
-          padding: '14px 20px',
-          background: 'rgba(30, 24, 18, 0.95)',
-          borderBottom: '1px solid rgba(242, 217, 160, 0.2)',
+          padding: '8px 14px',
+          background: '#dfdfdf',
+          borderBottom: '2px solid #808080',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '10px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '20px' }}>🐞</span>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 800, color: '#f2d9a0', letterSpacing: '1px' }}>
-                DEVTOOLS CONSOLE & SYSTEM TELEMETRY INSPECTOR
+              <div style={{ fontSize: '13px', fontWeight: 900, color: '#ff0000' }}>
+                WINDOWS HAS ENCOUNTERED A MINOR GLITCH (GARY'S ERROR CONSOLE)
               </div>
-              <div style={{ fontSize: '9px', color: '#a89880' }}>
-                Press F9 or ` ~ ` anytime to toggle mid-game
+              <div style={{ fontSize: '10px', color: '#555555', fontWeight: 'bold' }}>
+                Press F9 or ~ to hide this screen before Cheryl sees
               </div>
             </div>
           </div>

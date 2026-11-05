@@ -40,24 +40,25 @@ export default function CosmeticsModal({ onClose }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
     }}>
       <div style={{
-        background: 'linear-gradient(135deg, rgba(20,24,30,0.98), rgba(10,12,16,0.99))',
-        border: '2px solid var(--gold)', borderRadius: '16px',
-        width: '640px', maxWidth: '95vw', padding: '24px',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.8)', color: '#fff', textAlign: 'left',
+        background: '#c0c0c0',
+        borderTop: '4px solid #ffffff', borderLeft: '4px solid #ffffff',
+        borderRight: '4px solid #000000', borderBottom: '4px solid #000000',
+        borderRadius: 0,
+        width: '660px', maxWidth: '95vw', padding: '16px 20px',
+        boxShadow: '8px 8px 0px #000000', color: '#000080', textAlign: 'left',
         position: 'relative'
       }}>
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: '16px', right: '16px',
-            background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
-            fontSize: '18px', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer'
-          }}
-        >
-          ✕
-        </button>
+        {/* Retro Titlebar */}
+        <div className="retro-win-titlebar" style={{ margin: '0 0 10px 0' }}>
+          <span>✨ C:\WARDROBE\STEVE_FASHION_BOUTIQUE_2004.EXE</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={onClose}>X</button>
+          </div>
+        </div>
 
-        <h2 style={{ color: 'var(--gold-bright)', margin: '0 0 4px 0', fontSize: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+        <h2 style={{ color: '#ff0000', margin: '0 0 4px 0', fontSize: '18px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>
+          ✨ GARY'S SUNDAY BEST OUTFIT &amp; SPARKLE TRAILS
+        </h2>
           🎨 Character Wardrobe & Particle Trails
         </h2>
         <p style={{ color: '#aaa', fontSize: '11px', margin: '0 0 20px 0' }}>

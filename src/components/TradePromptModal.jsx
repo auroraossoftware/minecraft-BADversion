@@ -10,31 +10,40 @@ export default function TradePromptModal({ trade, walletBalance, onBuy, onSell, 
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(0, 0, 0, 0.75)',
-      backdropFilter: 'blur(8px)',
+      background: 'rgba(0, 0, 60, 0.85)',
+      backdropFilter: 'blur(4px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 1000,
-      color: '#fff',
-      fontFamily: "'Inter', system-ui, sans-serif"
+      color: '#000080',
     }}>
       <div style={{
-        background: 'linear-gradient(145deg, #18281c, #0d1610)',
-        border: '2px solid #39ff14',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.9), 0 0 30px rgba(57,255,20,0.3)',
-        borderRadius: '16px',
-        width: '420px',
-        padding: '24px',
+        background: '#c0c0c0',
+        borderTop: '4px solid #ffffff',
+        borderLeft: '4px solid #ffffff',
+        borderRight: '4px solid #000000',
+        borderBottom: '4px solid #000000',
+        boxShadow: '8px 8px 0px #000000',
+        borderRadius: '0px',
+        width: '440px',
+        padding: '16px 20px',
         textAlign: 'center',
         position: 'relative'
       }}>
+        <div className="retro-win-titlebar" style={{ margin: '0 0 10px 0' }}>
+          <span>🛍️ C:\COMMERCE\FLEA_MARKET_TRADE_2004.EXE</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={onClose}>X</button>
+          </div>
+        </div>
+
         {/* Header */}
-        <h2 style={{ margin: '0 0 8px 0', fontSize: '22px', color: '#39ff14', letterSpacing: '1px' }}>
-          🛍️ VILLAGE MARKET STALL
+        <h2 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#ff0000', fontWeight: 900, letterSpacing: '1px' }}>
+          🛍️ FLEA MARKET &amp; YARD SALE STALL
         </h2>
-        <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: '#a0d8b0', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
-          Trader Profession: {trade.profession || 'Merchant'}
+        <p style={{ margin: '0 0 14px 0', fontSize: '11px', color: '#000080', fontWeight: 'bold', textTransform: 'uppercase' }}>
+          Neighbor Trader: {trade.profession || 'Peddler'} (Cash Only)
         </p>
 
         {/* Item Showcase Card */}

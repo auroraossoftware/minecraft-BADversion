@@ -61,12 +61,16 @@ export default function HUDOverlay({
   return (
     <div id="hud">
       {/* Voxel Title */}
-      <div className="title">VOXEL</div>
+      <div className="title">VOXEL 2004 GOLD EDITION (3AM BUILD)</div>
+      <div><b>FPS:</b> {fps} (DIALUP ACCELERATED)</div>
+      <div><b>XYZ:</b> {coordsStr} (HOPEFULLY NOT IN DAVE'S LAWN)</div>
+      <div><b>TIME:</b> {clockStr} (PAST BEDTIME)</div>
+      {targetBlockName && <div><b>AIM:</b> {targetBlockName} (DO NOT SMASH)</div>}
 
       {/* ── ⚔️ EQUIPMENT & HOLDING HUD WIDGET — top left ── */}
       <div style={{
         position: 'fixed',
-        top: '60px',
+        top: '110px',
         left: '14px',
         display: 'flex',
         flexDirection: 'column',
@@ -77,36 +81,41 @@ export default function HUDOverlay({
       }}>
         {/* Main Hand Widget */}
         <div style={{
-          background: 'rgba(12, 10, 8, 0.70)',
-          border: '1px solid rgba(242, 217, 160, 0.3)',
-          borderRadius: '8px',
-          padding: '6px 12px',
+          background: '#c0c0c0',
+          borderTop: '2px solid #ffffff',
+          borderLeft: '2px solid #ffffff',
+          borderRight: '2px solid #000000',
+          borderBottom: '2px solid #000000',
+          borderRadius: '0px',
+          padding: '6px 10px',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
-          backdropFilter: 'blur(6px)',
-          boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
+          gap: '8px',
+          boxShadow: '3px 3px 0px #000000',
           minWidth: '180px',
         }}>
           <div style={{
             width: '36px', height: '36px',
-            background: selectedId > 0 ? 'rgba(35,28,18,0.9)' : 'rgba(20,16,10,0.6)',
-            border: `1px solid ${selectedId > 0 ? '#f2d9a0' : 'rgba(214,178,120,0.15)'}`,
-            borderRadius: '4px',
+            background: '#ffffff',
+            borderTop: '1px solid #808080',
+            borderLeft: '1px solid #808080',
+            borderRight: '1px solid #ffffff',
+            borderBottom: '1px solid #ffffff',
+            borderRadius: '0px',
             display: 'grid', placeItems: 'center',
           }}>
-            {selectedId > 0 ? <Swatch3D id={selectedId} /> : <span style={{ fontSize: '16px', opacity: 0.4 }}>✋</span>}
+            {selectedId > 0 ? <Swatch3D id={selectedId} /> : <span style={{ fontSize: '18px' }}>✋</span>}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '9px', color: '#c8b896', letterSpacing: '0.8px', textTransform: 'uppercase', fontWeight: 700 }}>
-              MAIN HAND
+            <span style={{ fontSize: '10px', color: '#000080', fontWeight: 900, textTransform: 'uppercase' }}>
+              MAIN HAND (HELD FIRM)
             </span>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: selectedId > 0 ? '#f2d9a0' : '#8a7a60' }}>
-              {selectedId > 0 ? thingName(selectedId) : 'Bare Hands'}
+            <span style={{ fontSize: '12px', fontWeight: 900, color: '#ff0000' }}>
+              {selectedId > 0 ? thingName(selectedId) : 'Bare Knuckles'}
             </span>
             {selectedId > 0 && ITEMS[selectedId]?.tool && (
-              <span style={{ fontSize: '8px', color: '#8fd06a', fontWeight: 'bold' }}>
-                Tier {ITEMS[selectedId].tier || 1} • {toolDurability[selectedId] !== undefined ? toolDurability[selectedId] : ([30, 60, 150, 500][(ITEMS[selectedId].tier || 1) - 1] || 30)} Durability
+              <span style={{ fontSize: '9px', color: '#008000', fontWeight: 'bold' }}>
+                Tier {ITEMS[selectedId].tier || 1} • {toolDurability[selectedId] !== undefined ? toolDurability[selectedId] : ([30, 60, 150, 500][(ITEMS[selectedId].tier || 1) - 1] || 30)} Uses Left
               </span>
             )}
           </div>
@@ -308,11 +317,13 @@ export default function HUDOverlay({
             }}
             title="Locate Nearest NPC Village"
             style={{
-              background: 'linear-gradient(135deg, rgba(57,255,20,0.25), rgba(20,60,25,0.4))',
-              border: '1px solid #39ff14',
-              borderRadius: '6px', padding: '5px 9px', color: '#88ff88', fontSize: '10px',
-              fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
-              boxShadow: '0 0 10px rgba(57,255,20,0.3)', backdropFilter: 'blur(4px)'
+              background: '#dfdfdf',
+              borderTop: '2px solid #ffffff',
+              borderLeft: '2px solid #ffffff',
+              borderRight: '2px solid #000000',
+              borderBottom: '2px solid #000000',
+              padding: '4px 8px', color: '#000080', fontSize: '11px',
+              fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
             }}
           >
             <span>🏡 VILLAGE</span>
@@ -322,17 +333,19 @@ export default function HUDOverlay({
             onClick={onOpenNotifications}
             title="Open Notification Center"
             style={{
-              background: notificationsCount > 0 ? 'rgba(214,178,120,0.35)' : 'rgba(0,0,0,0.55)',
-              border: `1px solid ${notificationsCount > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)'}`,
-              borderRadius: '6px', padding: '5px 9px', color: '#fff', fontSize: '10px',
-              fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)'
+              background: notificationsCount > 0 ? '#ffff99' : '#dfdfdf',
+              borderTop: '2px solid #ffffff',
+              borderLeft: '2px solid #ffffff',
+              borderRight: '2px solid #000000',
+              borderBottom: '2px solid #000000',
+              padding: '4px 8px', color: '#000080', fontSize: '11px',
+              fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
             }}
           >
-            <span>🔔 NOTIFICATIONS</span>
+            <span>🔔 BEEPERS</span>
             <span style={{
-              background: notificationsCount > 0 ? 'var(--gold-bright)' : 'rgba(255,255,255,0.2)',
-              color: '#000', borderRadius: '10px', padding: '1px 6px', fontSize: '9px', fontWeight: 800
+              background: notificationsCount > 0 ? '#ff0000' : '#808080',
+              color: '#fff', padding: '1px 5px', fontSize: '10px', fontWeight: 900
             }}>
               {notificationsCount}
             </span>
@@ -342,17 +355,19 @@ export default function HUDOverlay({
             onClick={onOpenChat}
             title="Toggle Chat Panel"
             style={{
-              background: unreadChatCount > 0 ? 'rgba(0,122,255,0.35)' : 'rgba(0,0,0,0.55)',
-              border: `1px solid ${unreadChatCount > 0 ? '#3897f0' : 'rgba(255,255,255,0.15)'}`,
-              borderRadius: '6px', padding: '5px 9px', color: '#fff', fontSize: '10px',
-              fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)'
+              background: unreadChatCount > 0 ? '#ffff99' : '#dfdfdf',
+              borderTop: '2px solid #ffffff',
+              borderLeft: '2px solid #ffffff',
+              borderRight: '2px solid #000000',
+              borderBottom: '2px solid #000000',
+              padding: '4px 8px', color: '#000080', fontSize: '11px',
+              fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
             }}
           >
-            <span>💬 CHAT</span>
+            <span>💬 AIM CHAT</span>
             <span style={{
-              background: unreadChatCount > 0 ? '#3897f0' : 'rgba(255,255,255,0.2)',
-              color: '#fff', borderRadius: '10px', padding: '1px 6px', fontSize: '9px', fontWeight: 800
+              background: unreadChatCount > 0 ? '#ff0000' : '#808080',
+              color: '#fff', padding: '1px 5px', fontSize: '10px', fontWeight: 900
             }}>
               {unreadChatCount}
             </span>
@@ -362,17 +377,19 @@ export default function HUDOverlay({
             onClick={onOpenErrorConsole}
             title="Open In-Game Error Console & Stack Inspector (Press F9 or ~)"
             style={{
-              background: errorCount > 0 ? 'rgba(255,77,77,0.35)' : 'rgba(0,0,0,0.55)',
-              border: `1px solid ${errorCount > 0 ? '#ff4d4d' : 'rgba(255,255,255,0.15)'}`,
-              borderRadius: '6px', padding: '5px 9px', color: '#fff', fontSize: '10px',
-              fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)'
+              background: errorCount > 0 ? '#ffcccc' : '#dfdfdf',
+              borderTop: '2px solid #ffffff',
+              borderLeft: '2px solid #ffffff',
+              borderRight: '2px solid #000000',
+              borderBottom: '2px solid #000000',
+              padding: '4px 8px', color: '#ff0000', fontSize: '11px',
+              fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
             }}
           >
-            <span>🐞 ERRORS</span>
+            <span>🐞 BUG LOG</span>
             <span style={{
-              background: errorCount > 0 ? '#ff4d4d' : 'rgba(255,255,255,0.2)',
-              color: errorCount > 0 ? '#fff' : '#aaa', borderRadius: '10px', padding: '1px 6px', fontSize: '9px', fontWeight: 800
+              background: errorCount > 0 ? '#ff0000' : '#808080',
+              color: '#fff', padding: '1px 5px', fontSize: '10px', fontWeight: 900
             }}>
               {errorCount}
             </span>
@@ -384,19 +401,19 @@ export default function HUDOverlay({
           onClick={onToggleBGM}
           title="Toggle Ambient Background Music"
           style={{
-            background: bgmActive ? 'rgba(57,255,20,0.25)' : 'rgba(0,0,0,0.55)',
-            border: `1px solid ${bgmActive ? '#39ff14' : 'rgba(255,255,255,0.15)'}`,
-            borderRadius: '6px',
-            padding: '4px 9px',
-            color: bgmActive ? '#39ff14' : '#ccc',
-            fontSize: '9px',
-            fontWeight: 'bold',
+            background: bgmActive ? '#ffff99' : '#dfdfdf',
+            borderTop: '2px solid #ffffff',
+            borderLeft: '2px solid #ffffff',
+            borderRight: '2px solid #000000',
+            borderBottom: '2px solid #000000',
+            padding: '4px 10px',
+            color: bgmActive ? '#ff0000' : '#000080',
+            fontSize: '11px',
+            fontWeight: 900,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '5px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(4px)',
             pointerEvents: 'auto',
             marginTop: '2px',
           }}

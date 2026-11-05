@@ -70,20 +70,34 @@ export default function AuthCard({ authStatus }) {
 
   return (
     <div className="card" id="authCard">
-      <h1>VOXEL</h1>
-      <div className="tag">A TINY WORLD</div>
-      <p style={{ marginBottom: '20px', fontSize: '11px', letterSpacing: '1px', color: 'var(--gold)', textTransform: 'uppercase' }}>
-        AUTHENTICATION REQUIRED
+      <div className="retro-win-titlebar">
+        <span>📁 C:\WINDOWS\SECURITY\GARY_LOGIN_CHECKPOINT_2004.EXE</span>
+        <div className="retro-win-controls">
+          <button className="retro-win-btn">_</button>
+          <button className="retro-win-btn">□</button>
+          <button className="retro-win-btn" onClick={() => alert("Windows cannot close this application. It is running at 3am.")}>X</button>
+        </div>
+      </div>
+
+      <h1>VOXEL 2004</h1>
+      <div className="tag">~*~ OFFICIAL 3D VOXEL CYBER-HOMEPAGE BY GARY (AGE 55) ~*~</div>
+
+      <div className="under-construction">
+        🚧 🚧 🚧 SITE UNDER HEAVY CONSTRUCTION — CODED AT 3:42 AM 🚧 🚧 🚧
+      </div>
+
+      <p style={{ marginBottom: '12px', fontSize: '11px', color: '#000080', fontWeight: 'bold' }}>
+        ⚠️ AUTHENTICATION REQUIRED: ENTER YOUR CREDENTIALS SLOWLY. DAVE IF YOU FORGOT YOUR PASSWORD CALL MY LANDLINE AFTER 9AM.
       </p>
 
       <div className="cloud-panel" style={{ marginTop: 0 }}>
-        <div className="cloud-title">🔑 Sign In or Create Account</div>
+        <div className="cloud-title">🔑 Sign In or Create New Cyber-Account</div>
         <div className="cloud-input-group">
           <input
             id="authEmail"
             type="email"
             className="cloud-input"
-            placeholder="Email Address"
+            placeholder="Electronic Mail (e.g. gary_bowling1951@aol.com)"
             autoComplete="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
@@ -93,7 +107,7 @@ export default function AuthCard({ authStatus }) {
             id="authPassword"
             type="password"
             className="cloud-input"
-            placeholder="Password"
+            placeholder="Secret Password Code (Do Not Share With Timmy)"
             value={password}
             onChange={e => setPassword(e.target.value)}
             disabled={loading}
@@ -102,7 +116,7 @@ export default function AuthCard({ authStatus }) {
             }}
           />
         </div>
-        <div className="cloud-actions" style={{ marginTop: '15px', justifyContent: 'center', gap: '8px' }}>
+        <div className="cloud-actions" style={{ marginTop: '12px', justifyContent: 'center', gap: '8px' }}>
           <button
             id="authSignInBtn"
             className="cloud-btn"
@@ -110,7 +124,7 @@ export default function AuthCard({ authStatus }) {
             onClick={handleSignIn}
             style={{ flex: 1, padding: '10px' }}
           >
-            {loading ? "Signing In..." : "Sign In"}
+            {loading ? "⌛ DIALING MODEM..." : "👉 LOG IN TO THE MATRIX (CLICK HARD) 👈"}
           </button>
           <button
             id="authRegisterBtn"
@@ -119,14 +133,25 @@ export default function AuthCard({ authStatus }) {
             onClick={handleRegister}
             style={{ flex: 1, padding: '10px' }}
           >
-            {loading ? "Registering..." : "Register"}
+            {loading ? "⌛ TRANSMITTING..." : "📝 NEW CITIZEN REGISTRATION FORM 📝"}
           </button>
         </div>
         {error && (
-          <div id="cloudAuthError" style={{ color: '#ff9a86', fontSize: '10px', marginTop: '8px', lineHeight: 1.3, textAlign: 'center' }}>
+          <div id="cloudAuthError" style={{ color: '#ff0000', fontSize: '11px', fontWeight: 'bold', marginTop: '8px', lineHeight: 1.3, textAlign: 'center', background: '#ffff99', border: '1px solid #ff0000', padding: '4px' }}>
             {error}
           </div>
         )}
+      </div>
+
+      <div style={{ fontSize: '10px', color: '#000080', marginTop: '10px', fontWeight: 'bold', fontStyle: 'italic' }}>
+        📌 Note from Gary: If screen flickers, hit the side of your CRT monitor. Cheryl went to bed at 11pm so keep your speakers down.
+      </div>
+
+      <div className="retro-badge-row">
+        <div className="retro-badge">🌐 IE 6.0 OPTIMIZED</div>
+        <div className="retro-badge">🛡️ MCAFEE 2003 VERIFIED</div>
+        <div className="retro-badge">☕ SUN JAVA POWERED</div>
+        <div className="hit-counter">VISITOR: 00042069</div>
       </div>
     </div>
   );

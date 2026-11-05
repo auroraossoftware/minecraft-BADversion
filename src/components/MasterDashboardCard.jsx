@@ -217,36 +217,46 @@ export default function MasterDashboardCard({ userEmail }) {
     <div style={{
       width: 'min(1060px, 95vw)',
       maxHeight: '92vh',
-      background: 'rgba(14, 11, 8, 0.98)',
-      border: '2px solid rgba(230, 180, 80, 0.45)',
-      borderRadius: 14,
-      boxShadow: '0 25px 90px rgba(0, 0, 0, 0.95), 0 0 40px rgba(230, 180, 80, 0.15)',
-      padding: '20px 24px',
-      color: '#f0e6d2',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
+      background: '#c0c0c0',
+      borderTop: '4px solid #ffffff',
+      borderLeft: '4px solid #ffffff',
+      borderRight: '4px solid #000000',
+      borderBottom: '4px solid #000000',
+      borderRadius: 0,
+      boxShadow: '8px 8px 0px #000000',
+      padding: '16px 20px',
+      color: '#000080',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
       position: 'relative',
       boxSizing: 'border-box',
     }}>
+      {/* Retro Titlebar */}
+      <div className="retro-win-titlebar" style={{ margin: '0 0 10px 0', padding: '3px 8px' }}>
+        <span>👑 C:\ADMIN\GOD_MODE_CONTROL_PANEL_2004.EXE [SYSTEM ROOT AUTHORITY]</span>
+        <div className="retro-win-controls">
+          <button className="retro-win-btn">X</button>
+        </div>
+      </div>
+
       {/* ── HEADER ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 26 }}>👑</span>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: 2, color: '#f5d77f', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-              SUPER-ADMIN CONTROL CENTER
+            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 900, letterSpacing: 1, color: '#ff0000' }}>
+              UNCLE GARY'S GOD-MODE SUPER-ADMIN CENTER
             </h1>
             <span style={{
-              background: 'rgba(230,180,80,0.2)', border: '1px solid rgba(230,180,80,0.6)',
-              color: '#f5d77f', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, letterSpacing: 1
+              background: '#ffff00', border: '1px solid #000',
+              color: '#ff0000', fontSize: 10, fontWeight: 900, padding: '2px 8px', borderRadius: 0, letterSpacing: 1
             }}>
-              ROLE: ADMIN
+              ROLE: GRANDMASTER GARY
             </span>
           </div>
-          <div style={{ fontSize: 11, color: '#a09075', marginTop: 3 }}>
-            Logged in as: <strong style={{ color: '#d6b278' }}>{userEmail}</strong> • Realtime World & Player Authority Console
+          <div style={{ fontSize: 11, color: '#000080', marginTop: 3, fontWeight: 'bold' }}>
+            Logged in as: <strong>{userEmail}</strong> • Absolute Power Console (Authorized by Gary)
           </div>
         </div>
 

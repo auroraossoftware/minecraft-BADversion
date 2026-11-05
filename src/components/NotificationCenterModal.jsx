@@ -27,33 +27,31 @@ export default function NotificationCenterModal({ currentUser, friendRequests = 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10000,
-      background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(8px)',
+      background: 'rgba(0, 0, 60, 0.85)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
     }}>
       <div style={{
-        background: 'linear-gradient(135deg, rgba(20,24,30,0.98), rgba(10,12,16,0.99))',
-        border: '2px solid var(--gold)', borderRadius: '16px',
-        width: '540px', maxWidth: '95vw', padding: '24px',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.8)', color: '#fff', textAlign: 'left',
+        background: '#c0c0c0',
+        borderTop: '4px solid #ffffff', borderLeft: '4px solid #ffffff',
+        borderRight: '4px solid #000000', borderBottom: '4px solid #000000',
+        borderRadius: 0,
+        width: '560px', maxWidth: '95vw', padding: '16px 20px',
+        boxShadow: '8px 8px 0px #000000', color: '#000080', textAlign: 'left',
         position: 'relative'
       }}>
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: '16px', right: '16px',
-            background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
-            fontSize: '18px', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer'
-          }}
-        >
-          ✕
-        </button>
+        {/* Retro Titlebar */}
+        <div className="retro-win-titlebar" style={{ margin: '0 0 10px 0' }}>
+          <span>🔔 C:\BEEPER\PAGER_ALERTS_AND_INVITES_2004.EXE</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={onClose}>X</button>
+          </div>
+        </div>
 
-        <h2 style={{ color: 'var(--gold-bright)', margin: '0 0 4px 0', fontSize: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          🔔 Notification Center ({totalCount})
+        <h2 style={{ color: '#ff0000', margin: '0 0 4px 0', fontSize: '18px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>
+          🔔 MOTOROLA PAGER &amp; BEEPER DISPATCH ({totalCount})
         </h2>
-        <p style={{ color: '#aaa', fontSize: '11px', margin: '0 0 16px 0' }}>
-          Manage your incoming friend requests and multiplayer room invitations.
+        <p style={{ color: '#000080', fontSize: '11px', margin: '0 0 14px 0', fontWeight: 'bold' }}>
+          Check incoming telegrams from neighbor players and party invites.
         </p>
 
         {/* Tab Filters */}

@@ -28,27 +28,29 @@ export default function EmeraldHUDOverlay() {
   return (
     <div style={{
       position: 'fixed',
-      top: '18px',
+      top: '36px',
       right: '240px',
-      background: 'rgba(12, 32, 18, 0.88)',
-      border: '2px solid #39ff14',
-      boxShadow: '0 0 18px rgba(57,255,20,0.35)',
-      borderRadius: '20px',
-      padding: '8px 16px',
+      background: '#ffff00',
+      borderTop: '3px solid #ffffff',
+      borderLeft: '3px solid #ffffff',
+      borderRight: '3px solid #000000',
+      borderBottom: '3px solid #000000',
+      boxShadow: '4px 4px 0px #000000',
+      borderRadius: '0px',
+      padding: '4px 12px',
       display: 'flex',
       alignItems: 'center',
-      gap: '10px',
+      gap: '6px',
       zIndex: 99,
-      color: '#ffffff',
-      fontFamily: "'Inter', system-ui, sans-serif",
-      fontWeight: '700',
-      fontSize: '15px',
-      backdropFilter: 'blur(6px)',
+      color: '#ff0000',
+      fontWeight: '900',
+      fontSize: '13px',
       userSelect: 'none',
       pointerEvents: 'none'
     }}>
-      <span style={{ fontSize: '20px', filter: 'drop-shadow(0 0 6px rgba(57,255,20,0.8))' }}>🪙</span>
-      <span style={{ color: '#88ff88', letterSpacing: '0.5px' }}>{coinCount} Green Coins</span>
+      <span style={{ fontSize: '18px' }}>🪙</span>
+      <span style={{ color: '#000080', letterSpacing: '0.5px' }}>GARY-BUCKS:</span>
+      <span style={{ color: '#ff0000', fontSize: '14px', fontWeight: 900 }}>{coinCount} Green Coins</span>
     </div>
   );
 }

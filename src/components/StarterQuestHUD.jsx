@@ -20,13 +20,13 @@ export default function StarterQuestHUD({ questState, onUpdateQuest }) {
   if (isAllComplete) {
     return (
       <div style={{
-        position: 'fixed', top: '16px', left: '50%', transform: 'translateX(-50%)',
-        zIndex: 140, background: 'rgba(20, 30, 20, 0.88)', border: '1px solid #39ff14',
-        borderRadius: '20px', padding: '6px 18px', color: '#39ff14',
-        fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px',
-        boxShadow: '0 4px 20px rgba(57, 255, 20, 0.3)', backdropFilter: 'blur(6px)'
+        position: 'fixed', top: '36px', left: '50%', transform: 'translateX(-50%)',
+        zIndex: 140, background: '#ffff00', border: '3px outset #ffffff',
+        borderRadius: '0px', padding: '6px 18px', color: '#ff0000',
+        fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px',
+        boxShadow: '4px 4px 0px #000000'
       }}>
-        <span>🎉 Master Builder Quest Completed! +50 Gold & Flame Trail Unlocked</span>
+        <span>🎉 ALL SUNDAY CHORES COMPLETED! GARY CAN SLEEP IN! +50 GOLD COINS</span>
       </div>
     );
   }
@@ -36,47 +36,49 @@ export default function StarterQuestHUD({ questState, onUpdateQuest }) {
 
   return (
     <div style={{
-      position: 'fixed', top: '16px', left: '50%', transform: 'translateX(-50%)',
-      zIndex: 140, width: '360px', maxWidth: '92vw',
-      background: 'rgba(16, 12, 8, 0.92)', border: '1px solid var(--gold)',
-      borderRadius: '12px', padding: '10px 14px', color: '#fff',
-      boxShadow: '0 8px 30px rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+      position: 'fixed', top: '36px', left: '50%', transform: 'translateX(-50%)',
+      zIndex: 140, width: '380px', maxWidth: '92vw',
+      background: '#ffffa5', borderTop: '3px solid #ffffff', borderLeft: '3px solid #ffffff',
+      borderRight: '3px solid #000000', borderBottom: '3px solid #000000',
+      borderRadius: '0px', padding: '10px 14px', color: '#000080',
+      boxShadow: '4px 4px 0px #000000',
       transition: 'all 0.3s ease'
     }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ fontSize: '14px' }}>{currentQuest.icon}</span>
-          <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--gold-bright)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Starter Quest ({activeIndex + 1}/{STARTER_QUESTS.length})
+          <span style={{ fontSize: '11px', fontWeight: 900, color: '#ff0000', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            📋 CHERYL'S SUNDAY CHORES ({activeIndex + 1}/{STARTER_QUESTS.length})
           </span>
         </div>
         <button
           onClick={() => setMinimized(!minimized)}
-          style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '11px' }}
+          style={{ background: '#c0c0c0', border: '1px outset #fff', color: '#000', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', padding: '1px 6px' }}
         >
-          {minimized ? '▼ Expand' : '▲ Hide'}
+          {minimized ? '▼ Show' : '▲ Hide'}
         </button>
       </div>
 
       {!minimized && (
         <>
-          <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff', marginBottom: '2px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 900, color: '#000080', marginBottom: '2px' }}>
             {currentQuest.title}
           </div>
-          <div style={{ fontSize: '10px', color: '#bbb', marginBottom: '8px' }}>
+          <div style={{ fontSize: '10px', color: '#444444', marginBottom: '8px', fontWeight: 'bold' }}>
             {currentQuest.desc}
           </div>
 
           {/* Progress Bar */}
           <div style={{
-            background: 'rgba(255,255,255,0.1)', borderRadius: '6px', height: '8px',
-            overflow: 'hidden', border: '1px solid rgba(255,255,255,0.15)', position: 'relative'
+            background: '#ffffff', borderRadius: '0px', height: '14px',
+            overflow: 'hidden', borderTop: '2px solid #000', borderLeft: '2px solid #000',
+            borderRight: '2px solid #fff', borderBottom: '2px solid #fff', position: 'relative'
           }}>
             <div style={{
               width: `${pct}%`, height: '100%',
-              background: 'linear-gradient(90deg, #d6b278, #ffd700)',
-              borderRadius: '6px', transition: 'width 0.4s ease'
+              background: 'repeating-linear-gradient(90deg, #000080, #000080 8px, #ffffff 8px, #ffffff 10px)',
+              transition: 'width 0.4s ease'
             }} />
           </div>
 

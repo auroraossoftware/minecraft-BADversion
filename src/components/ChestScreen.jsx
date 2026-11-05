@@ -96,19 +96,26 @@ export default function ChestScreen({ activeChestCoords, onClose, scheduleSave }
   return (
     <div id="chestScreen" className="modal-chest" style={{ display: 'flex' }}>
       <div className="chest-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h2>Chest Storage</h2>
-          <button className="chest-close" onClick={onClose}>Close [X]</button>
+        <div className="retro-win-titlebar" style={{ margin: '0 0 10px 0' }}>
+          <span>📁 C:\MY_DOCUMENTS\WOODEN_CHEST_27_FILES.DIR</span>
+          <div className="retro-win-controls">
+            <button className="retro-win-btn" onClick={onClose}>X</button>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h2 style={{ fontSize: '15px', color: '#000080', fontWeight: 900 }}>🗄️ UNCLE GARY'S 27-SLOT STORAGE CRATE</h2>
+          <button className="chest-close" onClick={onClose}>Close Window [X]</button>
         </div>
 
         <div className="chest-grids">
           {/* Player Inventory (left) */}
           <div className="chest-col">
-            <h3 style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', marginBottom: '10px' }}>Your Inventory (Click to store)</h3>
+            <h3 style={{ fontSize: '11px', color: '#000080', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 900 }}>🎒 Your Backpack (Click to Store)</h3>
             <div className="chest-grid">
               {ids.length === 0 ? (
-                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', gridColumn: 'span 4', textAlign: 'center', padding: '20px' }}>
-                  Inventory empty
+                <div style={{ color: '#888', fontSize: '11px', gridColumn: 'span 4', textAlign: 'center', padding: '20px', fontWeight: 'bold' }}>
+                  Backpack is empty
                 </div>
               ) : (
                 ids.map(id => (
@@ -128,13 +135,13 @@ export default function ChestScreen({ activeChestCoords, onClose, scheduleSave }
 
           {/* Chest Inventory (right) */}
           <div className="chest-col">
-            <h3 style={{ fontSize: '10px', color: 'var(--gold)', textTransform: 'uppercase', marginBottom: '10px' }}>Chest contents (Click to take)</h3>
+            <h3 style={{ fontSize: '11px', color: '#000080', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 900 }}>📦 27 Crate Files (Click to Take)</h3>
             <div className="chest-grid chest-grid-9">
               {chest.map((slot, idx) => (
                 <div 
                   key={idx} 
                   className="inv-cell clickable"
-                  style={{ minHeight: '40px', border: slot.id === 0 ? '1px solid rgba(214,178,120,0.15)' : '', background: slot.id === 0 ? 'rgba(0,0,0,0.2)' : '' }}
+                  style={{ minHeight: '40px', border: slot.id === 0 ? '1px solid #808080' : '', background: slot.id === 0 ? '#dfdfdf' : '' }}
                   onClick={(e) => handleRetrieveItem(idx, e)}
                 >
                   {slot.id > 0 ? (

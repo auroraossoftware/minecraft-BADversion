@@ -468,20 +468,38 @@ export default function App() {
 
   return (
     <>
+      {/* 2000s RETRO SCROLLING MARQUEES */}
+      <div className="retro-marquee-container retro-marquee-top">
+        <div className="marquee-text">
+          ★★★ WELCOME TO GARY'S OFFICIAL 3D VOXEL REALM 2004 ★★★ BEST VIEWED IN 800x600 INTERNET EXPLORER 6.0 ★★★ DAVE PLEASE RETURN MY WEED EATER ★★★ 100% CLEAN NO VIRUS GUARANTEED BY MCAFEE 2003 ★★★ DO NOT MAKE NOISE CHERYL IS ASLEEP UPSTAIRS ★★★ HIT ALL BUTTONS FIRMLY WITH MOUSE ★★★ VISITOR NUMBER: 00042069 ★★★
+        </div>
+      </div>
+      <div className="retro-marquee-container retro-marquee-bottom">
+        <div className="marquee-text-rev">
+          🚨 BREAKING NEWS: GARY ATE 14 BUFFALO WINGS AT BUFFALO WILD WINGS BEFORE CODING THIS AT 3:42 AM 🚨 RUNS ON PENTIUM 4 WITH 256MB RAM 🚨 POWERED BY 56K DIALUP ACCELERATOR 🚨 PLEASE SIGN MY GUESTBOOK BEFORE YOU LOG OFF 🚨
+        </div>
+      </div>
+
       {/* AUTH / LOBBY / MASTER / CONNECTING OVERLAY */}
       {showOverlay && (
         <div id="overlay">
           {showConnecting && (
-            <div className="card" id="connectingCard" style={{ maxWidth: '440px', width: '90vw', padding: '35px 30px' }}>
-              <h1>VOXEL</h1>
-              <div className="tag">A MULTIPLAYER VOXEL WORLD</div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', margin: '24px 0 10px 0' }}>
+            <div className="card" id="connectingCard" style={{ maxWidth: '460px', width: '92vw', padding: '24px 28px' }}>
+              <div className="retro-win-titlebar">
+                <span>📁 C:\WINDOWS\SYSTEM32\MODEM_CONNECT.EXE</span>
+                <div className="retro-win-controls">
+                  <button className="retro-win-btn">X</button>
+                </div>
+              </div>
+              <h1>VOXEL 2004</h1>
+              <div className="tag">~*~ DIALING HIGH-SPEED 56K CYBER-NETWORK ~*~</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', margin: '18px 0 10px 0' }}>
                 <div style={{
-                  width: '32px', height: '32px', border: '3px solid rgba(214, 178, 120, 0.2)',
-                  borderTopColor: 'var(--gold-bright)', borderRadius: '50%', animation: 'spin 0.8s linear infinite'
+                  width: '36px', height: '36px', border: '4px solid #808080',
+                  borderTopColor: '#ff0000', borderRadius: '50%', animation: 'spin 0.6s linear infinite'
                 }} />
-                <div style={{ fontSize: '12px', color: '#d8caae', letterSpacing: '1px', fontWeight: 600 }}>
-                  {syncMsg || 'Connecting to Firebase...'}
+                <div style={{ fontSize: '13px', color: '#000080', letterSpacing: '1px', fontWeight: 900 }}>
+                  {syncMsg || 'Connecting to Firebase... (Please do not pick up phone)'}
                 </div>
               </div>
             </div>
@@ -711,22 +729,30 @@ export default function App() {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'rgba(20,15,10,0.97)',
-              border: '2px solid rgba(214,178,120,0.45)',
-              borderRadius: 14,
-              padding: '36px 52px',
+              background: '#c0c0c0',
+              borderTop: '4px solid #ffffff',
+              borderLeft: '4px solid #ffffff',
+              borderRight: '4px solid #000000',
+              borderBottom: '4px solid #000000',
+              padding: '20px 28px',
               textAlign: 'center',
-              boxShadow: '0 25px 90px rgba(0,0,0,0.9), 0 0 30px rgba(214,178,120,0.1)',
-              maxWidth: 420,
-              width: '90vw',
+              boxShadow: '8px 8px 0px #000000',
+              maxWidth: 460,
+              width: '92vw',
             }}
           >
-            <div style={{ fontSize: 36, marginBottom: 6 }}>⏸</div>
-            <div style={{ color: '#f5d77f', fontSize: 24, fontWeight: 800, letterSpacing: 3, marginBottom: 6 }}>
-              GAME PAUSED
+            <div className="retro-win-titlebar">
+              <span>⚠️ C:\WINDOWS\SYSTEM32\EMERGENCY_PAUSE_ALERT.EXE</span>
+              <div className="retro-win-controls">
+                <button className="retro-win-btn">X</button>
+              </div>
             </div>
-            <div style={{ color: '#a89060', fontSize: 12, letterSpacing: 1, marginBottom: 20 }}>
-              Session paused • Click button or canvas to resume
+            <div style={{ fontSize: 32, marginBottom: 4 }}>⏸️</div>
+            <div style={{ color: '#ff0000', fontSize: 22, fontWeight: 900, letterSpacing: 2, marginBottom: 4 }}>
+              FATAL 3AM PAUSE DETECTED!
+            </div>
+            <div style={{ color: '#000080', fontSize: 12, fontWeight: 'bold', marginBottom: 16 }}>
+              Wife is asking what I am doing on the computer at 3:15 AM.<br/>Act casual. Pretend you are doing tax forms.
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -740,19 +766,20 @@ export default function App() {
                   forceUpdate();
                 }}
                 style={{
-                  background: 'rgba(214,178,120,0.2)',
-                  border: '1px solid rgba(214,178,120,0.6)',
-                  color: '#f5d77f',
+                  background: 'repeating-linear-gradient(45deg, #00ff00, #00ff00 10px, #ffff00 10px, #ffff00 20px)',
+                  borderTop: '3px solid #ffffff',
+                  borderLeft: '3px solid #ffffff',
+                  borderRight: '3px solid #000000',
+                  borderBottom: '3px solid #000000',
+                  color: '#000080',
                   padding: '12px 24px',
-                  borderRadius: 8,
                   fontSize: 13,
-                  fontWeight: 700,
+                  fontWeight: 900,
                   cursor: 'pointer',
                   letterSpacing: 1,
-                  transition: 'all 0.2s',
                 }}
               >
-                ▶ RESUME GAME
+                ▶ RESUME VOXELING (ACT CASUAL)
               </button>
 
               <button
@@ -761,19 +788,20 @@ export default function App() {
                   setShowOnboarding(true);
                 }}
                 style={{
-                  background: 'rgba(214,178,120,0.18)',
-                  border: '1px solid rgba(214,178,120,0.5)',
-                  color: '#f5d77f',
+                  background: '#dfdfdf',
+                  borderTop: '2px solid #ffffff',
+                  borderLeft: '2px solid #ffffff',
+                  borderRight: '2px solid #000000',
+                  borderBottom: '2px solid #000000',
+                  color: '#000080',
                   padding: '10px 24px',
-                  borderRadius: 8,
                   fontSize: 12,
-                  fontWeight: 700,
+                  fontWeight: 900,
                   cursor: 'pointer',
                   letterSpacing: 1,
-                  transition: 'all 0.2s',
                 }}
               >
-                📖 REPLAY SURVIVAL GUIDE
+                📖 READ GARY'S 40-PAGE SURVIVAL SCROLL
               </button>
 
               <button
@@ -784,24 +812,25 @@ export default function App() {
                   forceUpdate();
                 }}
                 style={{
-                  background: 'rgba(180,50,50,0.25)',
-                  border: '1px solid rgba(220,70,70,0.5)',
-                  color: '#ff9999',
+                  background: '#ffcccc',
+                  borderTop: '2px solid #ffffff',
+                  borderLeft: '2px solid #ffffff',
+                  borderRight: '2px solid #000000',
+                  borderBottom: '2px solid #000000',
+                  color: '#8b0000',
                   padding: '12px 24px',
-                  borderRadius: 8,
                   fontSize: 13,
-                  fontWeight: 700,
+                  fontWeight: 900,
                   cursor: 'pointer',
                   letterSpacing: 1,
-                  transition: 'all 0.2s',
                 }}
               >
-                🏠 EXIT TO HOME SCREEN
+                🚪 ABORT AND ESCAPE TO WINDOWS DESKTOP
               </button>
             </div>
 
-            <div style={{ color: '#786040', fontSize: 10, marginTop: 18, lineHeight: 1.5 }}>
-              💡 Press <span style={{ color: '#d6b278', border: '1px solid #786040', padding: '1px 5px', borderRadius: 3 }}>Esc</span> twice to exit to Home Screen • Press <span style={{ color: '#d6b278', border: '1px solid #786040', padding: '1px 5px', borderRadius: 3 }}>E</span> for Handbook
+            <div style={{ color: '#000080', fontSize: 11, marginTop: 14, fontWeight: 'bold' }}>
+              💡 Press <kbd>Esc</kbd> twice to panic quit • Press <kbd>E</kbd> for Backpack
             </div>
           </div>
         </div>
@@ -1318,9 +1347,18 @@ export default function App() {
       {player.dead && (
         <div className="death" style={{ display: 'flex' }}>
           <div className="death-card">
-            <h1>You Died</h1>
-            <p id="deathCause">{deathCause}</p>
-            <button id="respawnBtn" onClick={() => { respawnPlayer(); forceUpdate(); }}>Respawn</button>
+            <div className="retro-win-titlebar">
+              <span>☠️ C:\WINDOWS\SYSTEM32\FATAL_MORTALITY_REPORT.EXE</span>
+              <div className="retro-win-controls">
+                <button className="retro-win-btn">X</button>
+              </div>
+            </div>
+            <h1>OH DEAR LORD IN HEAVEN YOU DIED</h1>
+            <p id="deathCause" style={{ fontSize: '15px', color: '#ff0000', fontWeight: 900, margin: '14px 0' }}>{deathCause}</p>
+            <p style={{ color: '#000080', fontSize: '12px', fontWeight: 'bold', marginBottom: '16px' }}>
+              Gary is weeping into his Busch Light in the basement. Click Respawn before the monitor overheats!
+            </p>
+            <button id="respawnBtn" onClick={() => { respawnPlayer(); forceUpdate(); }}>⚡ DEFY GOD AND RESPAWN ⚡</button>
           </div>
         </div>
       )}
